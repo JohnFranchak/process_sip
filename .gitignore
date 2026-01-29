@@ -48,3 +48,9 @@ po/*~
 # RStudio Connect folder
 rsconnect/
 api_token.R
+18_1/session_info.csv
+18_LA.csv
+18_LH.csv
+18_RA.csv
+18_RH.csv
+.DS_Store
