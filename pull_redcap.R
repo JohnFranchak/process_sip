@@ -9,7 +9,7 @@ source("api_token.R")
 
 session_string  <-  as.character(factor(session, levels = 1:4, labels = c("visit_1_arm_1", "visit_2_arm_1", "visit_3_arm_1", "visit_4_arm_1")))
 
-ds <- redcap_read_oneshot(redcap_uri = uri, token = api_token, forms = c("session_notes")) %>% 
+ds <- redcap_read_oneshot(redcap_uri = uri, token = api_token, forms = c("session_notes"), guess_type = F) %>% 
   .[["data"]] %>% select(study_id, redcap_event_name, time_gopro_start:cg_off_5_reason) %>% 
   filter(id == study_id, redcap_event_name == session_string)
 

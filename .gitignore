@@ -54,3 +54,5 @@ api_token.R
 18_RA.csv
 18_RH.csv
 .DS_Store
+
+*.csv
