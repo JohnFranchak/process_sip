@@ -381,7 +381,7 @@ if  nrow(exclude_starts) > 0
 end
 
 ##
-CSV.write(id * "_" * session *"/" * "windows.csv", windows)
+CSV.write(id * "_" * session *"/" * "windows_4s.csv", windows)
 
 ds.time_sec0 = time_sec0
 slide0 = slide_calc(ds)
@@ -397,7 +397,7 @@ slide = vcat(slide0, slide1, slide2, slide3)
 sort!(slide, :time_start)
 @subset!(slide, :time_sec0 > 1)
 select!(slide, Not(:time_sec0))
-CSV.write(id * "_" * session *"/" * "mot_features_infant.csv", slide)
+CSV.write(id * "_" * session *"/" * "mot_features_infant_4s.csv", slide)
 
 @select!(windows, :temp_time)
 
@@ -410,6 +410,6 @@ features = Matrix(dropmissing(slide[:,Not(["time_start"])]))
 ds_out.pos = DecisionTree.predict(model, features)
 
 # WRITE CSV
-CSV.write(id * "_" * session * "/" * "predictions.csv", ds_out)
+CSV.write(id * "_" * session * "/" * "infant_position_predictions.csv", ds_out)
 
 println("Run took ", Dates.canonicalize(Dates.CompoundPeriod(now()-run_start)))
