@@ -33,3 +33,5 @@ check_file "${id}_${session}/right_hip_synced.csv"
 
 # Run Julia script sync_imu
 julia sync_imu.jl "$id" "$session"
+
+Rscript position_timeline.R "$id" "$session"

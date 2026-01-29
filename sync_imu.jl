@@ -4,7 +4,7 @@ using CategoricalArrays, DecisionTree, JLD2
 using Pipe: @pipe
 
 if length(ARGS) > 0
-    println("id " * ARGS[1] * " session " * ARGS[2])
+    println("Creating motion features for id " * ARGS[1] * " session " * ARGS[2])
     const id = ARGS[1]
     const session = ARGS[2]
 else
@@ -410,6 +410,8 @@ features = Matrix(dropmissing(slide[:,Not(["time_start"])]))
 ds_out.pos = DecisionTree.predict(model, features)
 
 # WRITE CSV
-CSV.write(id * "_" * session * "/" * "infant_position_predictions.csv", ds_out)
+CSV.write(id * "_" * session * "/" * "infant_position_predictions_4s.csv", ds_out)
 
+println("Wrote windows, motion features, and infant predictions for id " * id * " session " * session)
 println("Run took ", Dates.canonicalize(Dates.CompoundPeriod(now()-run_start)))
+
