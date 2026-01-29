@@ -18,18 +18,13 @@ sync_time <- read_csv(str_glue("{id}_{session}/session_info.csv"),
                       col_types = cols(.default = "c"))
 col_names <- c("time", "acc_x","acc_y", "acc_z", "gyr_x", "gyr_y","gyr_z")
 
-sync_time$sync_time_la <- sync_time$sync_point_matlab
-sync_time$sync_time_lh <- "2026-01-21 09:37:40.360"
-sync_time$sync_time_ra <- "2026-01-21 09:37:35.018"
-sync_time$sync_time_rh <- "2026-01-21 09:37:35.018"
-
-diff_lh <- as_datetime(sync_time$sync_time_la) - as_datetime(sync_time$sync_time_lh)
-diff_ra <- as_datetime(sync_time$sync_time_la) - as_datetime(sync_time$sync_time_ra)
-diff_rh <- as_datetime(sync_time$sync_time_la) - as_datetime(sync_time$sync_time_rh)
+diff_lh <- as_datetime(sync_time$sync_point_la) - as_datetime(sync_time$sync_point_lh)
+diff_ra <- as_datetime(sync_time$sync_point_la) - as_datetime(sync_time$sync_point_ra)
+diff_rh <- as_datetime(sync_time$sync_point_la) - as_datetime(sync_time$sync_point_rh)
 # THESE SHOULD BE TRUE
-# (as_datetime(sync_time$sync_time_lh[1]) + diff_lh) == as_datetime(sync_time$sync_time_la[1])
-# (as_datetime(sync_time$sync_time_ra[1]) + diff_ra) == as_datetime(sync_time$sync_time_la[1])
-# (as_datetime(sync_time$sync_time_rh[1]) + diff_rh) == as_datetime(sync_time$sync_time_la[1])
+# (as_datetime(sync_time$sync_point_lh[1]) + diff_lh) == as_datetime(sync_time$sync_point_la[1])
+# (as_datetime(sync_time$sync_point_ra[1]) + diff_ra) == as_datetime(sync_time$sync_point_la[1])
+# (as_datetime(sync_time$sync_point_rh[1]) + diff_rh) == as_datetime(sync_time$sync_point_la[1])
 
 dsla <- read_csv(str_glue("{id}_LA.csv"), col_names)
 dsla$time <- force_tz(dsla$time, "America/Los_Angeles")
@@ -63,16 +58,16 @@ dsrh <- mutate(dsrh, across(contains("acc"), ~ ifelse(.x > 4, 4, .x)),
   mutate(gyr_x = gyr_x*-1, gyr_z = gyr_z*-1)
 dsrh$time_sync <- dsrh$time + diff_rh
 
-# window_start <- force_tz(as_datetime(sync_time$sync_time_la),"America/Los_Angeles")
+# window_start <- force_tz(as_datetime(sync_time$sync_point_la),"America/Los_Angeles")
 # window_end <- window_start + seconds(60)
-# ggplot() + 
-#   geom_line(data = filter(dsra, time_sync > window_start, time_sync < window_end), aes(x = time_sync, y = acc_x), color = "black",  alpha = .3) + 
+# ggplot() +
+#   geom_line(data = filter(dsra, time_sync > window_start, time_sync < window_end), aes(x = time_sync, y = acc_x), color = "black",  alpha = .3) +
 #   geom_line(data = filter(dsla, time_sync > window_start, time_sync < window_end), aes(x = time_sync, y = acc_x), color = "red", alpha = .3) +
-#   geom_line(data = filter(dsrh, time_sync > window_start, time_sync < window_end), aes(x = time_sync, y = acc_x), color = "green",  alpha = .3) + 
-#   geom_line(data = filter(dslh, time_sync > window_start, time_sync < window_end), aes(x = time_sync, y = acc_x), color = "blue", alpha = .3) 
+#   geom_line(data = filter(dsrh, time_sync > window_start, time_sync < window_end), aes(x = time_sync, y = acc_x), color = "green",  alpha = .3) +
+#   geom_line(data = filter(dslh, time_sync > window_start, time_sync < window_end), aes(x = time_sync, y = acc_x), color = "blue", alpha = .3)
 
 
-test_date <- as.character(as_date(force_tz(as_datetime(sync_time$sync_time_lh),"America/Los_Angeles")))
+test_date <- as.character(as_date(force_tz(as_datetime(sync_time$sync_point_lh),"America/Los_Angeles")))
 start_time <- str_glue("{test_date} {sync_time$time_leg_on}:00")
 start_time <- force_tz(as_datetime(start_time),"America/Los_Angeles")
 
