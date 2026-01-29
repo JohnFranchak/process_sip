@@ -1,7 +1,7 @@
 args <- commandArgs(trailingOnly = TRUE)
 
 if (length(args) == 0) {
-  #stop("You must provide a filename argument", call. = FALSE)
+  print("No id or session supplied; using test parameters instead")
   # Interaction for testing
   id <- 18
   session <-  1

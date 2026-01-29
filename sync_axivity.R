@@ -1,8 +1,7 @@
 args <- commandArgs(trailingOnly = TRUE)
 
 if (length(args) == 0) {
-  #stop("You must provide a filename argument", call. = FALSE)
-  # Interaction for testing
+  print("No id or session supplied; using test parameters instead")
   id <- 18
   session <-  1
 } else {
@@ -11,7 +10,6 @@ if (length(args) == 0) {
 }
 
 library(tidyverse)
-removeQuotes <- function(x) gsub("\"", "", x)
 
 # FIGURE OUT SYNC TIMES
 sync_time <- read_csv(str_glue("{id}_{session}/session_info.csv"), 
@@ -21,12 +19,17 @@ col_names <- c("time", "acc_x","acc_y", "acc_z", "gyr_x", "gyr_y","gyr_z")
 diff_lh <- as_datetime(sync_time$sync_point_la) - as_datetime(sync_time$sync_point_lh)
 diff_ra <- as_datetime(sync_time$sync_point_la) - as_datetime(sync_time$sync_point_ra)
 diff_rh <- as_datetime(sync_time$sync_point_la) - as_datetime(sync_time$sync_point_rh)
-# THESE SHOULD BE TRUE
-# (as_datetime(sync_time$sync_point_lh[1]) + diff_lh) == as_datetime(sync_time$sync_point_la[1])
-# (as_datetime(sync_time$sync_point_ra[1]) + diff_ra) == as_datetime(sync_time$sync_point_la[1])
-# (as_datetime(sync_time$sync_point_rh[1]) + diff_rh) == as_datetime(sync_time$sync_point_la[1])
+test1 <- (as_datetime(sync_time$sync_point_lh[1]) + diff_lh) == as_datetime(sync_time$sync_point_la[1])
+test2 <- (as_datetime(sync_time$sync_point_ra[1]) + diff_ra) == as_datetime(sync_time$sync_point_la[1])
+test3 <- (as_datetime(sync_time$sync_point_rh[1]) + diff_rh) == as_datetime(sync_time$sync_point_la[1])
 
-dsla <- read_csv(str_glue("{id}_LA.csv"), col_names)
+if (test1 & test2 & test3) {
+  print("IMU signals successfully synchronized")
+} else {
+  print("IMU synchronization problem; abort and correct")
+}
+
+dsla <- read_csv(str_glue("{id}_LA.csv"), col_names, show_col_types = FALSE)
 dsla$time <- force_tz(dsla$time, "America/Los_Angeles")
 dsla <- mutate(dsla, across(contains("acc"), ~ ifelse(.x > 4, 4, .x)),
              across(contains("acc"), ~ ifelse(.x < -4, 4, .x))) %>% 
@@ -34,7 +37,7 @@ dsla <- mutate(dsla, across(contains("acc"), ~ ifelse(.x > 4, 4, .x)),
   mutate(gyr_x = gyr_x*-1, gyr_z = gyr_z*-1)
 dsla$time_sync <- dsla$time
 
-dsra <- read_csv(str_glue("{id}_RA.csv"), col_names)
+dsra <- read_csv(str_glue("{id}_RA.csv"), col_names, show_col_types = FALSE)
 dsra$time <- force_tz(dsra$time, "America/Los_Angeles")
 dsra <- mutate(dsra, across(contains("acc"), ~ ifelse(.x > 4, 4, .x)),
                across(contains("acc"), ~ ifelse(.x < -4, 4, .x))) %>% 
@@ -42,7 +45,7 @@ dsra <- mutate(dsra, across(contains("acc"), ~ ifelse(.x > 4, 4, .x)),
   mutate(gyr_x = gyr_x*-1, gyr_z = gyr_z*-1)
 dsra$time_sync <- dsra$time + diff_ra
 
-dslh <- read_csv(str_glue("{id}_LH.csv"), col_names)
+dslh <- read_csv(str_glue("{id}_LH.csv"), col_names, show_col_types = FALSE)
 dslh$time <- force_tz(dslh$time, "America/Los_Angeles")
 dslh <- mutate(dslh, across(contains("acc"), ~ ifelse(.x > 4, 4, .x)),
                across(contains("acc"), ~ ifelse(.x < -4, 4, .x))) %>% 
@@ -50,7 +53,7 @@ dslh <- mutate(dslh, across(contains("acc"), ~ ifelse(.x > 4, 4, .x)),
   mutate(gyr_x = gyr_x*-1, gyr_z = gyr_z*-1)
 dslh$time_sync <- dslh$time + diff_lh
 
-dsrh <- read_csv(str_glue("{id}_RH.csv"), col_names)
+dsrh <- read_csv(str_glue("{id}_RH.csv"), col_names, show_col_types = FALSE)
 dsrh$time <- force_tz(dsrh$time, "America/Los_Angeles")
 dsrh <- mutate(dsrh, across(contains("acc"), ~ ifelse(.x > 4, 4, .x)),
                across(contains("acc"), ~ ifelse(.x < -4, 4, .x))) %>% 
@@ -66,13 +69,14 @@ dsrh$time_sync <- dsrh$time + diff_rh
 #   geom_line(data = filter(dsrh, time_sync > window_start, time_sync < window_end), aes(x = time_sync, y = acc_x), color = "green",  alpha = .3) +
 #   geom_line(data = filter(dslh, time_sync > window_start, time_sync < window_end), aes(x = time_sync, y = acc_x), color = "blue", alpha = .3)
 
-
 test_date <- as.character(as_date(force_tz(as_datetime(sync_time$sync_point_lh),"America/Los_Angeles")))
 start_time <- str_glue("{test_date} {sync_time$time_leg_on}:00")
 start_time <- force_tz(as_datetime(start_time),"America/Los_Angeles")
 
 end_time <- str_glue("{test_date} {sync_time$time_leg_off}:00")
 end_time <- force_tz(as_datetime(end_time),"America/Los_Angeles")
+
+print(str_glue("Read 4 IMU files; filtering data from {start_time} to {end_time}"))
 
 # Turn into something we can analyze in Julia
 dsra <- dsra %>% filter(time_sync >= start_time, time_sync < end_time)
@@ -88,4 +92,6 @@ dslh %>% mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>%
   write_csv(str_glue("{id}_{session}/left_hip_synced.csv"))
 dsrh %>% mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
   write_csv(str_glue("{id}_{session}/right_hip_synced.csv"))
+
+print(str_glue("Successfully wrote synced IMU files to {id}_{session}/"))
 
