@@ -6,7 +6,8 @@ using Pipe: @pipe
 const run_start = now()
 
 const suffix = ""
-const id = "05"
+const id = "18"
+const session = "1"
 
 function assign(;s::AbstractString, v::Any)
 	s = Symbol(s)
@@ -22,7 +23,7 @@ end
 
 adjust_dst = 0
 function imu_file(;side, loc, suffix)
-    file = id *"/" * side * "_" * loc * suffix * "_synced.csv"
+    file = id * "_" * session * "/" * side * "_" * loc * suffix * "_synced.csv"
     println(file)
     short_code = side[1] * loc[1]
     temp = CSV.read(file, DataFrame; header=["time",short_code*"accx",short_code*"accy",short_code*"accz",short_code*"gyrx",short_code*"gyry",short_code*"gyrz"], skipto=2)
@@ -310,10 +311,10 @@ const time_sec3 = Int64.(round.((time_sec.+3)./4))
 windows = DataFrame(temp_time = temp_time, time_sec = time_sec, time_sec0 =  time_sec0,  time_sec1 = time_sec1,  time_sec2 = time_sec2,  time_sec3 = time_sec3)
 ##
 # Read nap and exclude times
-file = "SensorCP-SyncAndNapTimes_MASTER.csv"
-anno = CSV.read(file, DataFrame)
+file = id * "_" * session * "/session_info.csv"
+anno = CSV.read(file, DataFrame; missingstring = "NA")
+
 @chain anno begin
-    @subset!(:record_id .== parse(Int64,id))
     @transform! :time_nap_1_start = Date(windows.temp_time[1]) + :time_nap_1_start
     @transform! :time_nap_1_end = Date(windows.temp_time[1]) + :time_nap_1_end
     @transform! :time_nap_2_start = Date(windows.temp_time[1]) + :time_nap_2_start
@@ -372,7 +373,7 @@ if  nrow(exclude_starts) > 0
 end
 
 ##
-CSV.write(id *"/" * "windows.csv", windows)
+CSV.write(id * "_" * session *"/" * "windows.csv", windows)
 
 ds.time_sec0 = time_sec0
 slide0 = slide_calc(ds)
