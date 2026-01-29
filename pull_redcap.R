@@ -1,8 +1,17 @@
+args <- commandArgs(trailingOnly = TRUE)
+
+if (length(args) == 0) {
+  #stop("You must provide a filename argument", call. = FALSE)
+  # Interaction for testing
+  id <- 18
+  session <-  1
+} else {
+  id <- args[1]
+  session <- args[2]
+}
+
 library(tidyverse)
 library(REDCapR)
-
-id = 18
-session = 1
 
 uri <- "https://redcap.ucr.edu/api/"
 source("api_token.R")

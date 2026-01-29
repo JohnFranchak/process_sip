@@ -3,11 +3,19 @@ using CSV, DataFrames, Dates, DataFrameMacros, Chain, Statistics, TimeZones, Sta
 using CategoricalArrays, DecisionTree, JLD2
 using Pipe: @pipe
 
+if length(ARGS) > 0
+    println("id " * ARGS[1] * " session " * ARGS[2])
+    const id = ARGS[1]
+    const session = ARGS[2]
+else
+    # For interactive testing
+    const id = "18"
+    const session = "1"
+end
+
 const run_start = now()
 
 const suffix = ""
-const id = "18"
-const session = "1"
 
 function assign(;s::AbstractString, v::Any)
 	s = Symbol(s)
@@ -363,8 +371,8 @@ if  nrow(nap_starts) > 0
      end
 end
 
-exclude_starts = dropmissing(stack(select(select(anno, r"off"),r"start"),1:10))
-exclude_ends = dropmissing(stack(select(select(anno, r"off"),r"end"),1:10))
+exclude_starts = dropmissing(stack(select(select(select(anno, r"off"),r"start"),r"time"),1:10))
+exclude_ends = dropmissing(stack(select(select(select(anno, r"off"),r"start"),r"time"),1:10))
 windows[!, :exclude_period] .= 0
 if  nrow(exclude_starts) > 0
      for i in axes(exclude_starts,1)
@@ -389,7 +397,7 @@ slide = vcat(slide0, slide1, slide2, slide3)
 sort!(slide, :time_start)
 @subset!(slide, :time_sec0 > 1)
 select!(slide, Not(:time_sec0))
-CSV.write(id *"/" * "mot_features_infant.csv", slide)
+CSV.write(id * "_" * session *"/" * "mot_features_infant.csv", slide)
 
 @select!(windows, :temp_time)
 
@@ -397,11 +405,11 @@ ds_out = select(slide, :time_start)
 leftjoin!(ds_out, windows, on = :time_start => :temp_time)
 
 # PREDICT FROM MODEL
-model = load_object("group_model_TD.jld2")
+model = load_object("group_model_TDCP.jld2")
 features = Matrix(dropmissing(slide[:,Not(["time_start"])]))
 ds_out.pos = DecisionTree.predict(model, features)
 
 # WRITE CSV
-CSV.write(id *"/" * "predictions.csv", ds_out)
+CSV.write(id * "_" * session * "/" * "predictions.csv", ds_out)
 
 println("Run took ", Dates.canonicalize(Dates.CompoundPeriod(now()-run_start)))
