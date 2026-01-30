@@ -1,0 +1,12 @@
+using Pkg
+using Pkg; Pkg.status()
+Pkg.add("CSV")
+Pkg.add("DataFrames")
+Pkg.add("DataFrameMacros")
+Pkg.add("Chain")
+Pkg.add("TimeZones")
+Pkg.add("Pipe")
+Pkg.add("StatsBase")
+Pkg.add("DecisionTree")
+Pkg.add("CategoricalArrays")
+Pkg.add("JLD2")
