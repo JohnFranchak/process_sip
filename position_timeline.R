@@ -3,7 +3,7 @@ args <- commandArgs(trailingOnly = TRUE)
 if (length(args) == 0) {
   print("No id or session supplied; using test parameters instead")
   # Interaction for testing
-  id <- 18
+  id <- 12
   session <-  1
 } else {
   id <- args[1]
@@ -13,6 +13,10 @@ if (length(args) == 0) {
 library(tidyverse)
 library(hms)
 library(scales)
+library(REDCapR)
+
+uri <- "https://redcap.ucr.edu/api/"
+source("api_token.R")
 
 theme_update(text = element_text(size = 12),
              axis.text.x = element_text(size = 12, color = "black"), 
@@ -34,6 +38,20 @@ sync$id = id
 sync$time_plot <- as_hms(force_tz(sync$time, "America/Los_Angeles"))
 
 sync_filt <- sync %>% filter(nap_period == 0, exclude_period == 0)
+
+session_string  <-  as.character(factor(session, levels = 1:4, labels = c("visit_1_arm_1", "visit_2_arm_1", "visit_3_arm_1", "visit_4_arm_1")))
+# ema <- redcap_read_oneshot(redcap_uri = uri, token = api_token, records = id, forms = c("hour_activity"), guess_type = F) %>% 
+#   .[["data"]] 
+
+events <- redcap_event_instruments(redcap_uri = uri, token = api_token)$data
+events <- events %>% filter(str_detect(unique_event_name, str_glue("visit_{session}")),
+                            form == "hour_activity") %>% pull(unique_event_name)
+ema <- redcap_read(redcap_uri = uri, token = api_token, events = events, records = id, forms = "hour_activity")$data
+
+# %>% select(study_id, redcap_event_name, time_gopro_start:cg_off_5_reason) %>% 
+#   filter(id == study_id, redcap_event_name == session_string)
+
+
 
 lims <- as_hms(c('08:00:00', '21:59:00'))
 hour_breaks = as_hms(c('09:00:00', '10:00:00', '11:00:00', '12:00:00', '13:00:00', '14:00:00', '15:00:00', '16:00:00', '17:00:00', '18:00:00', '19:00:00', '20:00:00', '21:00:00'))
