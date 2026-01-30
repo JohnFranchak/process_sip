@@ -56,4 +56,5 @@ api_token.R
 .DS_Store
 
 *.csv
+*.pdf
 group_model_TDCP.jld2
