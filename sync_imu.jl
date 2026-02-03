@@ -9,7 +9,7 @@ if length(ARGS) > 0
     const session = ARGS[2]
 else
     # For interactive testing
-    const id = "18"
+    const id = "15"
     const session = "1"
 end
 
@@ -46,7 +46,7 @@ const locs = ["hip" "hip" "ankle" "ankle"]
 for i in eachindex(sides)
     imu_file(; side=sides[i], loc=locs[i], suffix)
 end
-##
+
 
 ds = @pipe outerjoin(la, ra, on = :time) |> 
     outerjoin(_, lh, on = :time) |>
@@ -367,16 +367,16 @@ nap_ends = dropmissing(stack(select(select(anno, r"nap"),r"end"),1:6))
 windows[!, :nap_period] .= 0
 if  nrow(nap_starts) > 0
      for i in axes(nap_starts,1)
-         @transform!(windows, @subset(:temp_time > nap_starts.value[i] && :temp_time < nap_ends.value[i]), :nap_period = 1)
+         @transform!(windows, @subset(:temp_time >= nap_starts.value[i] && :temp_time <= nap_ends.value[i]), :nap_period = 1)
      end
 end
 
 exclude_starts = dropmissing(stack(select(select(select(anno, r"off"),r"start"),r"time"),1:10))
-exclude_ends = dropmissing(stack(select(select(select(anno, r"off"),r"start"),r"time"),1:10))
+exclude_ends = dropmissing(stack(select(select(select(anno, r"off"),r"end"),r"time"),1:10))
 windows[!, :exclude_period] .= 0
 if  nrow(exclude_starts) > 0
      for i in axes(exclude_starts,1)
-         @transform!(windows, @subset(:temp_time > exclude_starts.value[i] && :temp_time < exclude_ends.value[i]), :exclude_period = 1)
+         @transform!(windows, @subset(:temp_time >= exclude_starts.value[i] && :temp_time <= exclude_ends.value[i]), :exclude_period = 1)
      end
 end
 

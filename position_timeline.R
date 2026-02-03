@@ -47,7 +47,8 @@ session_string  <-  as.character(factor(session, levels = 1:4, labels = c("visit
 events <- redcap_event_instruments(redcap_uri = uri, token = api_token)$data
 events <- events %>% filter(str_detect(unique_event_name, str_glue("visit_{session}")),
                             form == "hour_activity") %>% pull(unique_event_name)
-ema <- redcap_read(redcap_uri = uri, token = api_token, events = events, records = id, forms = "hour_activity")$data
+ema <- redcap_read(redcap_uri = uri, token = api_token, events = events, records = id, forms = "hour_activity")$data %>% 
+  filter(str_detect(redcap_event_name, "test", negate = T))
 hour_midpoints <- as_hms(c('07:30:00','08:30:00','09:30:00', '10:30:00', '11:30:00', '12:30:00', '13:30:00', '14:30:00', '15:30:00', '16:30:00', '17:30:00', '18:30:00', '19:30:00'))
 ema$time <- hour_midpoints
 # %>% select(study_id, redcap_event_name, time_gopro_start:cg_off_5_reason) %>% 
