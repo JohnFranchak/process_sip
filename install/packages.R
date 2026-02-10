@@ -1,6 +1,0 @@
-options(repos = c(CRAN = "http://cran.us.r-project.org"))
-install.packages("tidyverse")
-install.packages("hms")
-install.packages("scales")
-install.packages("REDCapR")
-install.packages("patchwork")
