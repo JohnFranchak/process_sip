@@ -1,7 +1,12 @@
-## 
+using Pkg
+# Activate the folder where this script lives
+Pkg.activate(@__DIR__)
+
 using CSV, DataFrames, Dates, DataFrameMacros, Chain, Statistics, TimeZones, StatsBase
 using CategoricalArrays, DecisionTree, JLD2
 using Pipe: @pipe
+
+println("Running in environment: ", Base.active_project())
 
 if length(ARGS) > 0
     println("Creating motion features for id " * ARGS[1] * " session " * ARGS[2])
