@@ -16,7 +16,7 @@ opts.EmptyLineRule = "read";
 % Specify variable properties
 opts = setvaropts(opts, "Time", "InputFormat", "yyyy-MM-dd HH:mm:ss.SSS");
 
-ppt = "16";
+ppt = "23";
 
 %%
 % Import the LEFT ANKLE
