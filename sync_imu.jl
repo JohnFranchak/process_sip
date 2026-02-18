@@ -14,7 +14,7 @@ if length(ARGS) > 0
     const session = ARGS[2]
 else
     # For interactive testing
-    const id = "15"
+    const id = "18"
     const session = "1"
 end
 
@@ -400,7 +400,7 @@ slide3 = slide_calc(ds)
 slide = vcat(slide0, slide1, slide2, slide3)
 #slide = vcat(slide1, slide3)
 sort!(slide, :time_start)
-@subset!(slide, :time_sec0 > 1)
+@subset!(slide, :time_sec0 >= 0)
 select!(slide, Not(:time_sec0))
 CSV.write(id * "_" * session *"/" * "mot_features_infant_4s.csv", slide)
 

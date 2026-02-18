@@ -58,3 +58,4 @@ api_token.R
 *.csv
 *.pdf
 group_model_TDCP.jld2
+group_model_parent.jld2
