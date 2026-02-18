@@ -66,7 +66,7 @@ linkaxes([ax1 ax2 ax3],'x')
 
 %%
 % Import the RIGHT HIP
-righthip = readtable(strcat(ppt,"_RA.csv"), opts);
+righthip = readtable(strcat(ppt,"_RH.csv"), opts);
 
 close all
 clf
