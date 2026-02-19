@@ -14,7 +14,7 @@ if length(ARGS) > 0
     const session = ARGS[2]
 else
     # For interactive testing
-    const id = "23"
+    const id = "16"
     const session = "1"
 end
 
@@ -231,11 +231,17 @@ ds = filter(row -> row.time_sec_rounded >= 0, ds)
 select!(ds, Not(:time_sec_rounded))
 
 ##
+timesecmax = ifelse(nrow(windows) > nrow(ds), nrow(ds), nrow(windows))
 
-time_sec0 = windows.time_sec0[1:nrow(ds)]
-time_sec1 = windows.time_sec1[1:nrow(ds)]
-time_sec2 = windows.time_sec2[1:nrow(ds)]
-time_sec3 = windows.time_sec3[1:nrow(ds)]
+time_sec0 = windows.time_sec0[1:timesecmax]
+time_sec1 = windows.time_sec1[1:timesecmax]
+time_sec2 = windows.time_sec2[1:timesecmax]
+time_sec3 = windows.time_sec3[1:timesecmax]
+
+ds = ds[1:timesecmax,:]
+
+println("CG IMU starts at ", ds.time[1], " and windows start at ", windows.temp_time[1])
+println("CG IMU ends at ", ds.time[end], " and windows end at ", windows.temp_time[end])
 
 ##
 
