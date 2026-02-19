@@ -14,7 +14,7 @@ if length(ARGS) > 0
     const session = ARGS[2]
 else
     # For interactive testing
-    const id = "18"
+    const id = "12"
     const session = "1"
 end
 
@@ -227,17 +227,17 @@ temp_time = ds.time
 
 ds.time_sec_rounded = round.(datetime2unix.(temp_time) .- datetime2unix.(windows.temp_time[1]), digits = 2)
 ds = filter(row -> row.time_sec_rounded >= 0, ds)
-
-ds_joined = leftjoin(windows, ds, on = :time_sec_rounded => :time_sec_rounded)
+select!(ds, Not(:time_sec_rounded))
 
 ##
 
 time_sec0 = windows.time_sec0[1:nrow(ds)]
-time_sec1 = windows.time_sec0[1:nrow(ds)]
-time_sec2 = windows.time_sec0[1:nrow(ds)]
-time_sec3 = windows.time_sec0[1:nrow(ds)]
+time_sec1 = windows.time_sec1[1:nrow(ds)]
+time_sec2 = windows.time_sec2[1:nrow(ds)]
+time_sec3 = windows.time_sec3[1:nrow(ds)]
 
 ##
+dropmissing!(ds)
 ds.time_sec0 = time_sec0
 slide0 = slide_calc(ds)
 ds.time_sec0 = time_sec1

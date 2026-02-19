@@ -3,7 +3,7 @@ args <- commandArgs(trailingOnly = TRUE)
 if (length(args) == 0) {
   print("No id or session supplied; using test parameters instead")
   # Interaction for testing
-  id <- 18
+  id <- 12
   session <-  1
 } else {
   id <- args[1]
@@ -82,7 +82,8 @@ p3 <- sync %>% mutate(cgpos = as.numeric(cgpos == "Upright")) %>%
         axis.title.x = element_blank(),
         axis.text.x = element_blank(),
         axis.ticks.x = element_blank()) + 
-  scale_y_continuous(name = "CG", breaks = c(0,1), labels = c("0 min", "10 min"))
+  scale_x_time(breaks = hour_breaks, name = "", limits = lims, labels = label_breaks) + 
+  scale_y_continuous(name = "CG Up", breaks = c(0,1), labels = c("0%", "100%"))
 
 pal <-  c("#F0E442","#009E73","#56B4E9", "#E69F00","#0072B2") %>%  set_names(c("Standing", "Sitting", "Prone", "Supine", "Held"))
 
