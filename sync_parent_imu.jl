@@ -14,7 +14,7 @@ if length(ARGS) > 0
     const session = ARGS[2]
 else
     # For interactive testing
-    const id = "12"
+    const id = "23"
     const session = "1"
 end
 
@@ -177,6 +177,7 @@ function calc_between_diff(data; abs_suffix = false)
 end
 
 function slide_calc(ds_temp)
+    dropmissing!(ds_temp)
     times = @combine(@groupby(ds_temp, :time_sec0), "time_start" = first(:time, 1))
     simple_stats = @combine(@groupby(ds_temp, :time_sec0), begin
         "mean_{}" = mean({r"acc|gyr"})
@@ -237,7 +238,7 @@ time_sec2 = windows.time_sec2[1:nrow(ds)]
 time_sec3 = windows.time_sec3[1:nrow(ds)]
 
 ##
-dropmissing!(ds)
+
 ds.time_sec0 = time_sec0
 slide0 = slide_calc(ds)
 ds.time_sec0 = time_sec1
