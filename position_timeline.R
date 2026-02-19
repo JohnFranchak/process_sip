@@ -83,7 +83,7 @@ p3 <- sync %>% mutate(cgpos = as.numeric(cgpos == "Upright")) %>%
         axis.text.x = element_blank(),
         axis.ticks.x = element_blank()) + 
   scale_x_time(breaks = hour_breaks, name = "", limits = lims, labels = label_breaks) + 
-  scale_y_continuous(name = "CG Up", breaks = c(0,1), labels = c("0%", "100%"))
+  scale_y_continuous(name = "CG Up", breaks = c(0,1), labels = c("0%", "100%"), limits = c(0,1))
 
 pal <-  c("#F0E442","#009E73","#56B4E9", "#E69F00","#0072B2") %>%  set_names(c("Standing", "Sitting", "Prone", "Supine", "Held"))
 
