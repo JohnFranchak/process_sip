@@ -224,25 +224,28 @@ end
 windows = CSV.read(id * "_" * session * "/" * "windows_4s.csv", DataFrame)
 
 temp_time = ds.time
-ds.time_sec = datetime2unix.(temp_time) .- datetime2unix.(temp_time[1])
 
-ds_joined = leftjoin(windows, ds, on = :time_sec => :time_sec)
-ds_joined = dropmissing(ds_joined)
+ds.time_sec_rounded = round.(datetime2unix.(temp_time) .- datetime2unix.(windows.temp_time[1]), digits = 2)
+ds = filter(row -> row.time_sec_rounded >= 0, ds)
 
-time_sec1 = ds_joined.time_sec1
-time_sec2 = ds_joined.time_sec2
-time_sec3 = ds_joined.time_sec3
+ds_joined = leftjoin(windows, ds, on = :time_sec_rounded => :time_sec_rounded)
 
-select!(ds_joined, Not([:time_sec, :temp_time,:time_sec1, :time_sec2, :time_sec3, :time_leg_on, :time_leg_off, :nap_period, :exclude_period]))
 ##
 
-slide0 = slide_calc(ds_joined)
-ds_joined.time_sec0 = time_sec1
-slide1 = slide_calc(ds_joined)
-ds_joined.time_sec0 = time_sec2
-slide2 = slide_calc(ds_joined)
-ds_joined.time_sec0 = time_sec3
-slide3 = slide_calc(ds_joined)
+time_sec0 = windows.time_sec0[1:nrow(ds)]
+time_sec1 = windows.time_sec0[1:nrow(ds)]
+time_sec2 = windows.time_sec0[1:nrow(ds)]
+time_sec3 = windows.time_sec0[1:nrow(ds)]
+
+##
+ds.time_sec0 = time_sec0
+slide0 = slide_calc(ds)
+ds.time_sec0 = time_sec1
+slide1 = slide_calc(ds)
+ds.time_sec0 = time_sec2
+slide2 = slide_calc(ds)
+ds.time_sec0 = time_sec3
+slide3 = slide_calc(ds)
 
 slide = vcat(slide0, slide1, slide2, slide3)
 sort!(slide, :time_start)
