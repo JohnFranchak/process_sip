@@ -77,13 +77,12 @@ p1 <- ema_plot %>% mutate(Activity = factor(Activity,
         axis.ticks.x = element_blank()) + ylim(0,60)
 
 p3 <- sync %>% mutate(cgpos = as.numeric(cgpos == "Upright")) %>% 
-  ggplot(aes(x = time_plot, y = cgpos)) + geom_ma(n = 600, linetype = 1) + ylim(0,1) + 
+  ggplot(aes(x = time_plot, y = cgpos)) + geom_ma(n = 600, linetype = 1) + 
   theme(legend.position = "top",
         axis.title.x = element_blank(),
         axis.text.x = element_blank(),
-        axis.text.y = element_blank(),
         axis.ticks.x = element_blank()) + 
-  ylab("CG")
+  scale_y_continuous(name = "CG", breaks = c(0,1), labels = c("0 min", "10 min"))
 
 pal <-  c("#F0E442","#009E73","#56B4E9", "#E69F00","#0072B2") %>%  set_names(c("Standing", "Sitting", "Prone", "Supine", "Held"))
 
