@@ -240,8 +240,8 @@ time_sec3 = windows.time_sec3[1:timesecmax]
 
 ds = ds[1:timesecmax,:]
 
-println("CG IMU starts at ", ds.time[1], " and windows start at ", windows.temp_time[1])
-println("CG IMU ends at ", ds.time[end], " and windows end at ", windows.temp_time[end])
+println("CG IMU starts at ", ds.time[1], " and windows start at ", windows.temp_time[1], ", difference of ", windows.temp_time[1]-ds.time[1])
+println("CG IMU ends at ", ds.time[end], " and windows end at ", windows.temp_time[end], " difference of ", windows.temp_time[end]-ds.time[end])
 
 ##
 
