@@ -3,8 +3,8 @@ args <- commandArgs(trailingOnly = TRUE)
 if (length(args) == 0) {
   print("No id or session supplied; using test parameters instead")
   # Interaction for testing
-  id <- 16
-  session <-  2
+  id <- 18
+  session <-  1
 } else {
   id <- args[1]
   session <- args[2]
