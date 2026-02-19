@@ -15,6 +15,7 @@ library(hms)
 library(scales)
 library(REDCapR)
 library(patchwork)
+library(tidyquant)
 
 uri <- "https://redcap.ucr.edu/api/"
 source("api_token.R")
@@ -30,19 +31,24 @@ theme_update(text = element_text(size = 12),
              axis.ticks.length=unit(.25, "cm"), 
              legend.key = element_rect(fill = "white")) 
 
-predictions <- read_csv(str_glue("{id}_{session}/infant_position_predictions_4s.csv")) %>% rename(time = time_start)
+predictions <- read_csv(str_glue("{id}_{session}/infant_position_predictions_4s.csv")) %>% 
+  rename(time = time_start) %>% mutate(time_rounded = round(as.numeric(time)))
+
+cg_predictions <- read_csv(str_glue("{id}_{session}/cg_position_predictions_4s.csv")) %>% 
+  rename(cgpos = pos) %>% mutate(time_rounded = round(as.numeric(time_start))) %>% 
+  select(-time_start)
+
 windows <- read_csv(str_glue("{id}_{session}/windows_4s.csv"))  %>% 
   rename(time = temp_time) %>% 
   select(-(time_sec:time_sec3))
-sync <- left_join(predictions, windows)
+
+sync <- left_join(predictions, cg_predictions) %>% left_join(windows)
 sync$id = id
 sync$time_plot <- as_hms(force_tz(sync$time, "America/Los_Angeles"))
 
 sync_filt <- sync %>% filter(nap_period == 0, exclude_period == 0)
 
 session_string  <-  as.character(factor(session, levels = 1:4, labels = c("visit_1_arm_1", "visit_2_arm_1", "visit_3_arm_1", "visit_4_arm_1")))
-# ema <- redcap_read_oneshot(redcap_uri = uri, token = api_token, records = id, forms = c("hour_activity"), guess_type = F) %>% 
-#   .[["data"]] 
 
 events <- redcap_event_instruments(redcap_uri = uri, token = api_token)$data
 events <- events %>% filter(str_detect(unique_event_name, str_glue("visit_{session}")),
@@ -51,8 +57,6 @@ ema <- redcap_read(redcap_uri = uri, token = api_token, events = events, records
   filter(str_detect(redcap_event_name, "test", negate = T))
 hour_midpoints <- as_hms(c('07:30:00','08:30:00','09:30:00', '10:30:00', '11:30:00', '12:30:00', '13:30:00', '14:30:00', '15:30:00', '16:30:00', '17:30:00', '18:30:00', '19:30:00'))
 ema$time <- hour_midpoints
-# %>% select(study_id, redcap_event_name, time_gopro_start:cg_off_5_reason) %>% 
-#   filter(id == study_id, redcap_event_name == session_string)
 
 lims <- as_hms(c('07:00:00', '21:59:00'))
 hour_breaks = as_hms(c('07:00:00','08:00:00','09:00:00', '10:00:00', '11:00:00', '12:00:00', '13:00:00', '14:00:00', '15:00:00', '16:00:00', '17:00:00', '18:00:00', '19:00:00', '20:00:00', '21:00:00'))
@@ -72,6 +76,14 @@ p1 <- ema_plot %>% mutate(Activity = factor(Activity,
         axis.text.x = element_blank(),
         axis.ticks.x = element_blank()) + ylim(0,60)
 
+p3 <- sync %>% mutate(cgpos = as.numeric(cgpos == "Upright")) %>% 
+  ggplot(aes(x = time_plot, y = cgpos)) + geom_ma(n = 600, linetype = 1) + ylim(0,1) + 
+  theme(legend.position = "top",
+        axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.x = element_blank()) + 
+  ylab("CG")
 
 pal <-  c("#F0E442","#009E73","#56B4E9", "#E69F00","#0072B2") %>%  set_names(c("Standing", "Sitting", "Prone", "Supine", "Held"))
 
@@ -89,6 +101,6 @@ p2 <- sync_filt %>% mutate(pos = ifelse(pos == "Upright", "Standing", pos),
     legend.position = "bottom"
   ) 
 
-p1/p2
+p1/p3/p2 + plot_layout(heights = c(3,1,2))
 ggsave(str_glue("{id}_{session}/position_timeline.pdf"), width = 10, height = 6)
   
