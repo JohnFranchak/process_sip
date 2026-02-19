@@ -2,8 +2,8 @@ args <- commandArgs(trailingOnly = TRUE)
 
 if (length(args) == 0) {
   print("No id or session supplied; using test parameters instead")
-  id <- 18
-  session <-  1
+  id <- 13
+  session <-  2
 } else {
   id <- args[1]
   session <- args[2]
@@ -72,6 +72,28 @@ dsch$time_sync <- dsch$time + diff_ch
 dscw <- read_csv(str_glue("{id}_CW.csv"), col_names, show_col_types = FALSE)
 dscw$time <- force_tz(dscw$time, "America/Los_Angeles")
 dscw$time_sync <- dscw$time + diff_cw
+
+# Flip leggings if needed
+if (str_glue("{id}_{session}") %in% c("13_2")) {
+  dsla$acc_y <- dsla$acc_y*-1
+  dsla$gyr_y <- dsla$gyr_y*-1
+  dsla$acc_z <- dsla$acc_z*-1
+  dsla$gyr_z <- dsla$gyr_z*-1
+  dsra$acc_y <- dsra$acc_y*-1
+  dsra$gyr_y <- dsra$gyr_y*-1
+  dsra$acc_z <- dsra$acc_z*-1
+  dsra$gyr_z <- dsra$gyr_z*-1
+  dslh$acc_y <- dslh$acc_y*-1
+  dslh$gyr_y <- dslh$gyr_y*-1
+  dslh$acc_z <- dslh$acc_z*-1
+  dslh$gyr_z <- dslh$gyr_z*-1
+  dsrh$acc_y <- dsrh$acc_y*-1
+  dsrh$gyr_y <- dsrh$gyr_y*-1
+  dsrh$acc_z <- dsrh$acc_z*-1
+  dsrh$gyr_z <- dsrh$gyr_z*-1
+  print("********Flipping Y and Z axes")
+}
+
 
 # window_start <- force_tz(as_datetime(sync_time$sync_point_la),"America/Los_Angeles")
 # window_end <- window_start + seconds(60)
