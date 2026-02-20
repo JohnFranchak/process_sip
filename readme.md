@@ -1,6 +1,7 @@
 # Sensors in Person Data Processing Scripts
 John Franchak, 1/29/2026
 - 2/10/2026: Updated installation process to use julia project.toml
+- 2/20/2026: Included caregiver IMU files
 
 ## Requirements
 - Julia version 1.12.3
@@ -10,7 +11,7 @@ John Franchak, 1/29/2026
 - Matlab 2024 or later to find sync points
 - Internet access (to access REDCap data)
 - Valid REDCap API token downloaded from the server
-- Julia prediction models downloaded from the server (e.g., "group_model_TDCP.jld2")
+- Julia prediction models downloaded from the server (e.g., "group_model_TDCP.jld2" and "group_model_parent.jld2")
 
 ## Installation
 - Install [Julia](https://julialang.org/downloads/manual-downloads/)
@@ -28,7 +29,7 @@ John Franchak, 1/29/2026
 Before a file can be processed, you must:
 - Use "find_sync_points.m" to find the motion sync points
 - Enter the motion sync points in REDCap
-- Place all 4 IMU files in the main working directory
+- Place all 6 IMU files in the main working directory
 
 If the file is ready (those steps are completed), you can process the infant position data by opening the terminal to the process_sip directory and type `./process_sip.sh [id] [session]` and hit enter. This will:
 - Create an output directory for the file and session, such as "12_1"
@@ -36,6 +37,7 @@ If the file is ready (those steps are completed), you can process the infant pos
 - Trim the IMU time series and synchronize them to each other
 - Create the motion features
 - Create the windows
+- Create the parent motion features
 - Make the predictions
 - Graph the predictions
 
