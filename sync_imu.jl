@@ -414,6 +414,11 @@ model = load_object("group_model_TDCP.jld2")
 features = Matrix(dropmissing(slide[:,Not(["time_start"])]))
 ds_out.pos = DecisionTree.predict(model, features)
 
+# PREDICT RESTRAINT
+model_rest = load_object("group_model_restraint_GA.jld2")
+#features = Matrix(dropmissing(slide[:,Not(["time_start"])]))
+ds_out.restraint = DecisionTree.predict(model_rest, features)
+
 # WRITE CSV
 CSV.write(id * "_" * session * "/" * "infant_position_predictions_4s.csv", ds_out)
 
