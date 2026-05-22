@@ -14,7 +14,7 @@ if length(ARGS) > 0
     const session = ARGS[2]
 else
     # For interactive testing
-    const id = "13"
+    const id = "12"
     const session = "1"
 end
 
@@ -404,7 +404,7 @@ sort!(slide, :time_start)
 select!(slide, Not(:time_sec0))
 CSV.write(id * "_" * session *"/" * "mot_features_infant_4s.csv", slide)
 
-@select!(windows, :temp_time)
+@select!(windows, :temp_time, :nap_period, :exclude_period)
 
 ds_out = select(slide, :time_start)
 leftjoin!(ds_out, windows, on = :time_start => :temp_time)

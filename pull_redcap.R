@@ -3,8 +3,8 @@ args <- commandArgs(trailingOnly = TRUE)
 if (length(args) == 0) {
   print("No id or session supplied; using test parameters instead")
   # Interaction for testing
-  id <- 13
-  session <-  2
+  id <- 12
+  session <-  1
 } else {
   id <- args[1]
   session <- args[2]
@@ -20,8 +20,8 @@ session_string  <-  as.character(factor(session, levels = 1:4, labels = c("visit
 
 print(str_glue("Pulling REDCap data for {id} {session_string}"))
 
-ds <- redcap_read_oneshot(redcap_uri = uri, token = api_token, forms = c("session_notes"), guess_type = F) %>% 
-  .[["data"]] %>% select(study_id, redcap_event_name, time_gopro_start:cg_off_5_reason) %>% 
+ds <- redcap_read(redcap_uri = uri, token = api_token, forms = c("session_notes"), guess_type = F) %>% 
+  .[["data"]] %>% select(study_id, redcap_event_name, time_gopro_start:cg_off_6_reason) %>% 
   filter(id == study_id, redcap_event_name == session_string)
 
 if (nrow(ds) == 0) {
