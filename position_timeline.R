@@ -76,8 +76,10 @@ p1 <- ema_plot %>% mutate(Activity = factor(Activity,
         axis.text.x = element_blank(),
         axis.ticks.x = element_blank()) + ylim(0,60)
 
-p3 <- sync %>% mutate(cgpos = as.numeric(cgpos == "Upright")) %>% 
-  ggplot(aes(x = time_plot, y = cgpos)) + geom_ma(n = 600, linetype = 1) + 
+p3 <- sync %>% mutate(cgpos = as.numeric(cgpos == "Upright"),
+                      cgpos = ifelse(cg_exclude_period == 1, NA, cgpos),
+                      group_id = consecutive_id(!is.na(cgpos))) %>% 
+  ggplot(aes(x = time_plot, y = cgpos, group = group_id)) + geom_ma(n = 300, linetype = 1) + 
   theme(legend.position = "top",
         axis.title.x = element_blank(),
         axis.text.x = element_blank(),
@@ -87,8 +89,8 @@ p3 <- sync %>% mutate(cgpos = as.numeric(cgpos == "Upright")) %>%
 
 p4 <- sync %>% mutate(inf_wear = as.numeric(wear_status == "worn"), 
                       cg_wear = as.numeric(cg_wear_status == "worn")) %>% 
-  ggplot() + geom_ma(aes(x = time_plot, y = inf_wear), n = 300, color = "red") + 
-  geom_ma(aes(x = time_plot, y = cg_wear), n = 300, linetype = 1, color = "blue") +
+  ggplot() + geom_ma(aes(x = time_plot, y = inf_wear), n = 150, color = "red") + 
+  geom_ma(aes(x = time_plot, y = cg_wear), n = 150, linetype = 1, color = "blue") +
   theme(legend.position = "top",
         axis.title.x = element_blank(),
         axis.text.x = element_blank(),
