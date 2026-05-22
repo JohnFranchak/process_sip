@@ -404,14 +404,48 @@ sort!(slide, :time_start)
 select!(slide, Not(:time_sec0))
 CSV.write(id * "_" * session *"/" * "mot_features_infant_4s.csv", slide)
 
+function add_session_wear_labels!(df::DataFrame; acc_threshold::Float64=0.02, gyro_threshold::Float64=1.0)
+    sensors = ["lh", "rh", "la", "ra"]
+    df[!, :wear_status] = Vector{String}(undef, nrow(df))
+    for r in 1:nrow(df)
+        all_sensors_static = true
+        for s in sensors
+            # 1. Compute 3D Acceleration Standard Deviation
+            sd_acc_x = df[r, "sd_$(s)accx"]
+            sd_acc_y = df[r, "sd_$(s)accy"]
+            sd_acc_z = df[r, "sd_$(s)accz"]
+            acc_sd_3d = sqrt(sd_acc_x^2 + sd_acc_y^2 + sd_acc_z^2)
+            # 2. Compute 3D Gyroscope Standard Deviation
+            sd_gyr_x = df[r, "sd_$(s)gyrx"]
+            sd_gyr_y = df[r, "sd_$(s)gyry"]
+            sd_gyr_z = df[r, "sd_$(s)gyrz"]
+            gyr_sd_3d = sqrt(sd_gyr_x^2 + sd_gyr_y^2 + sd_gyr_z^2)
+            # 3. Determine if this specific sensor is flatline (static)
+            is_acc_flat  = acc_sd_3d < acc_threshold
+            is_gyro_flat = gyr_sd_3d < gyro_threshold
+            is_static    = is_acc_flat && is_gyro_flat
+            # If even one sensor has motion, then they are not all static
+            if !is_static
+                all_sensors_static = false
+                break # We can stop checking other sensors for this row
+            end
+        end        
+        df[r, :wear_status] = all_sensors_static ? "not_worn" : "worn"
+    end
+    df[!, :wear_status] = categorical(df[!, :wear_status])
+    return df
+end
+
+add_session_wear_labels!(slide)
+
 @select!(windows, :temp_time, :nap_period, :exclude_period)
 
-ds_out = select(slide, :time_start)
+ds_out = select(slide, :time_start, :wear_status)
 leftjoin!(ds_out, windows, on = :time_start => :temp_time)
 
 # PREDICT FROM MODEL
 model = load_object("group_model_TDCP.jld2")
-features = Matrix(dropmissing(slide[:,Not(["time_start"])]))
+features = Matrix(dropmissing(slide[:,Not(["time_start", "wear_status"])]))
 ds_out.pos = DecisionTree.predict(model, features)
 
 # PREDICT RESTRAINT
