@@ -3,7 +3,7 @@ args <- commandArgs(trailingOnly = TRUE)
 if (length(args) == 0) {
   print("No id or session supplied; using test parameters instead")
   # Interaction for testing
-  id <- 23
+  id <- 12
   session <-  1
 } else {
   id <- args[1]
@@ -85,6 +85,18 @@ p3 <- sync %>% mutate(cgpos = as.numeric(cgpos == "Upright")) %>%
   scale_x_time(breaks = hour_breaks, name = "", limits = lims, labels = label_breaks) + 
   scale_y_continuous(name = "CG Up", breaks = c(0,1), labels = c("0%", "100%"), limits = c(0,1))
 
+p4 <- sync %>% mutate(inf_wear = as.numeric(wear_status == "worn"), 
+                      cg_wear = as.numeric(cg_wear_status == "worn")) %>% 
+  ggplot() + geom_ma(aes(x = time_plot, y = inf_wear), n = 300, color = "red") + 
+  geom_ma(aes(x = time_plot, y = cg_wear), n = 300, linetype = 1, color = "blue") +
+  theme(legend.position = "top",
+        axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank()) + 
+  scale_x_time(breaks = hour_breaks, name = "", limits = lims, labels = label_breaks) + 
+  scale_y_continuous(name = "Wear", breaks = c(0,1), labels = c("0%", "100%"), limits = c(0,1))
+
+
 pal <-  c("#F0E442","#009E73","#56B4E9", "#E69F00","#0072B2") %>%  set_names(c("Standing", "Sitting", "Prone", "Supine", "Held"))
 
 p2 <- sync_filt %>% mutate(pos = ifelse(pos == "Upright", "Standing", pos),
@@ -101,6 +113,6 @@ p2 <- sync_filt %>% mutate(pos = ifelse(pos == "Upright", "Standing", pos),
     legend.position = "bottom"
   ) 
 
-p1/p3/p2 + plot_layout(heights = c(3,1,2))
+p1/p3/p4/p2 + plot_layout(heights = c(3,1,1,2))
 ggsave(str_glue("{id}_{session}/position_timeline.pdf"), width = 10, height = 6)
   

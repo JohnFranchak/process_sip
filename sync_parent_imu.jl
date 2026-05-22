@@ -14,7 +14,7 @@ if length(ARGS) > 0
     const session = ARGS[2]
 else
     # For interactive testing
-    const id = "16"
+    const id = "12"
     const session = "1"
 end
 
@@ -224,7 +224,28 @@ end
 
 windows = CSV.read(id * "_" * session * "/" * "windows_4s.csv", DataFrame)
 
+file = id * "_" * session * "/session_info.csv"
+anno = CSV.read(file, DataFrame; missingstring = "NA")
 temp_time = ds.time
+
+@chain anno begin
+    @transform! :cg_off_1_start = Date(windows.temp_time[1]) + :cg_off_1_start
+    @transform! :cg_off_1_end = Date(windows.temp_time[1]) + :cg_off_1_end
+    @transform! :cg_off_2_start = Date(windows.temp_time[1]) + :cg_off_2_start
+    @transform! :cg_off_2_end = Date(windows.temp_time[1]) + :cg_off_2_end
+    @transform! :cg_off_3_start = Date(windows.temp_time[1]) + :cg_off_3_start
+    @transform! :cg_off_3_end = Date(windows.temp_time[1]) + :cg_off_3_end
+    @transform! :cg_off_4_start = Date(windows.temp_time[1]) + :cg_off_4_start
+    @transform! :cg_off_4_end = Date(windows.temp_time[1]) + :cg_off_4_end
+    @transform! :cg_off_5_start = Date(windows.temp_time[1]) + :cg_off_5_start
+    @transform! :cg_off_5_end = Date(windows.temp_time[1]) + :cg_off_5_end
+    @transform! :cg_off_6_start = Date(windows.temp_time[1]) + :cg_off_6_start
+    @transform! :cg_off_6_end = Date(windows.temp_time[1]) + :cg_off_6_end
+end
+
+exclude_starts = dropmissing(stack(select(select(select(anno, r"off"),r"start"),r"cg"),1:6))
+exclude_ends = dropmissing(stack(select(select(select(anno, r"off"),r"end"),r"cg"),1:6))
+
 
 ds.time_sec_rounded = round.(datetime2unix.(temp_time) .- datetime2unix.(windows.temp_time[1]), digits = 2)
 ds = filter(row -> row.time_sec_rounded >= 0, ds)
@@ -260,14 +281,64 @@ sort!(slide, :time_start)
 select!(slide, Not(:time_sec0))
 CSV.write(id * "_" * session *"/" * "mot_features_cg_4s.csv", slide)
 
-@select!(windows, :temp_time)
+function add_cg_session_wear_labels!(df::DataFrame; acc_threshold::Float64=0.01, gyro_threshold::Float64=1.0)
+    sensors = ["lh", "lw"]
+    
+    # Pre-allocate the unified wear status column
+    df[!, :cg_wear_status] = Vector{String}(undef, nrow(df))
+    
+    for r in 1:nrow(df)
+        all_sensors_static = true
+        
+        for s in sensors
+            # 1. Compute 3D Acceleration Standard Deviation
+            sd_acc_x = df[r, "sd_$(s)accx"]
+            sd_acc_y = df[r, "sd_$(s)accy"]
+            sd_acc_z = df[r, "sd_$(s)accz"]
+            acc_sd_3d = sqrt(sd_acc_x^2 + sd_acc_y^2 + sd_acc_z^2)
+            
+            # 2. Compute 3D Gyroscope Standard Deviation
+            sd_gyr_x = df[r, "sd_$(s)gyrx"]
+            sd_gyr_y = df[r, "sd_$(s)gyry"]
+            sd_gyr_z = df[r, "sd_$(s)gyrz"]
+            gyr_sd_3d = sqrt(sd_gyr_x^2 + sd_gyr_y^2 + sd_gyr_z^2)
+            
+            # 3. Determine if this specific sensor is flatline (static)
+            is_acc_flat  = acc_sd_3d < acc_threshold
+            is_gyro_flat = gyr_sd_3d < gyro_threshold
+            is_static    = is_acc_flat && is_gyro_flat
+            
+            # If even one sensor has motion, then they are not all static
+            if !is_static
+                all_sensors_static = false
+                break # We can stop checking other sensors for this row
+            end
+        end
+        
+        # We only predict "not_worn" if every single sensor is completely static
+        df[r, :cg_wear_status] = all_sensors_static ? "not_worn" : "worn"
+    end
+    
+    # Convert to CategoricalArray for machine learning compatibility
+    df[!, :cg_wear_status] = categorical(df[!, :cg_wear_status])
+    
+    return df
+end
+add_cg_session_wear_labels!(slide)
 
-ds_out = select(slide, :time_start)
-leftjoin!(ds_out, windows, on = :time_start => :temp_time)
+ds_out = select(slide, :time_start, :cg_wear_status)
+ds_out[!, :cg_exclude_period] .= 0
+if  nrow(exclude_starts) > 0
+     for i in axes(exclude_starts,1)
+         @transform!(ds_out, @subset(:time_start >= exclude_starts.value[i] && :time_start <= exclude_ends.value[i]), :cg_exclude_period = 1)
+     end
+end
+
+#leftjoin!(ds_out, windows, on = :time_start => :temp_time)
 
 # PREDICT FROM MODEL
 model = load_object("group_model_parent.jld2")
-features = Matrix(dropmissing(slide[:,Not(["time_start"])]))
+features = Matrix(dropmissing(slide[:,Not(["time_start", "cg_wear_status"])]))
 ds_out.pos = DecisionTree.predict(model, features)
 
 # WRITE CSV
