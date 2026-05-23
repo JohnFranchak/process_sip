@@ -115,7 +115,7 @@ print("Finished writing infant predictions ")
 
 ## 
 
-#for folder in subfolders
+for folder in subfolders
     
     print("Predicting CG position for " * basename(folder) * "\n")
     feature_file = folder *"/" * "mot_features_cg_4s.csv"
