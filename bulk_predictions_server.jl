@@ -3,7 +3,8 @@ using CategoricalArrays, DecisionTree, JLD2
 using Pipe: @pipe
 
 target_dir = "/Volumes/padlab/study_sensorsinperson/data_processed/imu"
-subfolders = filter(isdir, joinpath.(target_dir, readdir(target_dir)))
+subfolders = filter(isdir, joinpath.(target_dir, readdir(target_dir))) #Run everyone
+#subfolders = "/Volumes/padlab/study_sensorsinperson/data_processed/imu/42_1" #Run specific
 
 # LOAD MODELS
 model = load_object("group_model_TDCP.jld2")
