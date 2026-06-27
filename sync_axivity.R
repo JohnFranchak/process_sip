@@ -2,14 +2,31 @@ args <- commandArgs(trailingOnly = TRUE)
 
 if (length(args) == 0) {
   print("No id or session supplied; using test parameters instead")
-  id <- 12
-  session <-  1
+  id <- 34
+  session <-  2
 } else {
   id <- args[1]
   session <- args[2]
 }
 
 library(tidyverse)
+
+# CHECK FOR IMU FILES
+
+if (file.exists(str_glue("{id}_LA.csv")) & file.exists(str_glue("{id}_LH.csv")) & 
+    file.exists(str_glue("{id}_RA.csv")) & file.exists(str_glue("{id}_RH.csv"))){
+  print("Found all infant IMU files")
+} else {
+  print("Missing infant IMU files, check and re-run")
+}
+
+if (file.exists(str_glue("{id}_CW.csv")) & file.exists(str_glue("{id}_CH.csv"))){
+  print("Found all caregiver IMU files")
+  process_cg <- TRUE
+} else {
+  print("Missing caregiver IMU files, running without")
+  process_cg <- FALSE
+}
 
 # FIGURE OUT SYNC TIMES
 sync_time <- read_csv(str_glue("{id}_{session}/session_info.csv"), 
@@ -27,10 +44,18 @@ test3 <- (as_datetime(sync_time$sync_point_rh[1]) + diff_rh) == as_datetime(sync
 test4 <- (as_datetime(sync_time$sync_point_ch[1]) + diff_ch) == as_datetime(sync_time$sync_point_la[1])
 test5 <- (as_datetime(sync_time$sync_point_cw[1]) + diff_cw) == as_datetime(sync_time$sync_point_la[1])
 
-if (test1 & test2 & test3 & test4 & test5) {
-  print("IMU signals successfully synchronized")
+if (process_cg) {
+  if (test1 & test2 & test3 & test4 & test5) {
+    print("IMU signals successfully synchronized")
+  } else {
+    print("IMU synchronization problem; abort and correct")
+  }
 } else {
-  print("IMU synchronization problem; abort and correct")
+  if (test1 & test2 & test3) {
+    print("IMU signals successfully synchronized")
+  } else {
+    print("IMU synchronization problem; abort and correct")
+  }
 }
 
 dsla <- read_csv(str_glue("{id}_LA.csv"), col_names, show_col_types = FALSE)
@@ -65,13 +90,15 @@ dsrh <- mutate(dsrh, across(contains("acc"), ~ ifelse(.x > 4, 4, .x)),
   mutate(gyr_x = gyr_x*-1, gyr_z = gyr_z*-1)
 dsrh$time_sync <- dsrh$time + diff_rh
 
-dsch <- read_csv(str_glue("{id}_CH.csv"), col_names, show_col_types = FALSE)
-dsch$time <- force_tz(dsch$time, "America/Los_Angeles")
-dsch$time_sync <- dsch$time + diff_ch
-
-dscw <- read_csv(str_glue("{id}_CW.csv"), col_names, show_col_types = FALSE)
-dscw$time <- force_tz(dscw$time, "America/Los_Angeles")
-dscw$time_sync <- dscw$time + diff_cw
+if (process_cg) {
+  dsch <- read_csv(str_glue("{id}_CH.csv"), col_names, show_col_types = FALSE)
+  dsch$time <- force_tz(dsch$time, "America/Los_Angeles")
+  dsch$time_sync <- dsch$time + diff_ch
+  
+  dscw <- read_csv(str_glue("{id}_CW.csv"), col_names, show_col_types = FALSE)
+  dscw$time <- force_tz(dscw$time, "America/Los_Angeles")
+  dscw$time_sync <- dscw$time + diff_cw
+}
 
 # Flip leggings if needed
 if (str_glue("{id}_{session}") %in% c("13_2")) {
@@ -94,18 +121,6 @@ if (str_glue("{id}_{session}") %in% c("13_2")) {
   print("********Flipping Y and Z axes")
 }
 
-
-# window_start <- force_tz(as_datetime(sync_time$sync_point_la),"America/Los_Angeles")
-# window_end <- window_start + seconds(60)
-# ggplot() +
-#   geom_line(data = filter(dsra, time_sync > window_start, time_sync < window_end), aes(x = time_sync, y = acc_x), color = "black",  alpha = .3) +
-#   geom_line(data = filter(dsla, time_sync > window_start, time_sync < window_end), aes(x = time_sync, y = acc_x), color = "red", alpha = .3) +
-#   geom_line(data = filter(dsrh, time_sync > window_start, time_sync < window_end), aes(x = time_sync, y = acc_x), color = "green",  alpha = .3) +
-#   geom_line(data = filter(dslh, time_sync > window_start, time_sync < window_end), aes(x = time_sync, y = acc_x), color = "blue", alpha = .3) +
-#   geom_line(data = filter(dsch, time_sync > window_start, time_sync < window_end), aes(x = time_sync, y = acc_x), color = "purple", alpha = .3) +
-#   geom_line(data = filter(dscw, time_sync > window_start, time_sync < window_end), aes(x = time_sync, y = acc_x), color = "yellow", alpha = .3) +
-#   theme_minimal()
-
 test_date <- as.character(as_date(force_tz(as_datetime(sync_time$sync_point_lh),"America/Los_Angeles")))
 start_time <- str_glue("{test_date} {sync_time$time_leg_on}:00")
 start_time <- force_tz(as_datetime(start_time),"America/Los_Angeles")
@@ -120,9 +135,6 @@ dsra <- dsra %>% filter(time_sync >= start_time, time_sync < end_time)
 dsla <- dsla %>% filter(time_sync >= start_time, time_sync < end_time)
 dsrh <- dsrh %>% filter(time_sync >= start_time, time_sync < end_time)
 dslh <- dslh %>% filter(time_sync >= start_time, time_sync < end_time)
-dsch <- dsch %>% filter(time_sync >= start_time, time_sync < end_time)
-dscw <- dscw %>% filter(time_sync >= start_time, time_sync < end_time)
-
 dsla %>% mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
   write_csv(str_glue("{id}_{session}/left_ankle_synced.csv"))
 dsra %>% mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
@@ -131,10 +143,15 @@ dslh %>% mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>%
   write_csv(str_glue("{id}_{session}/left_hip_synced.csv"))
 dsrh %>% mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
   write_csv(str_glue("{id}_{session}/right_hip_synced.csv"))
-dsch %>% mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
-  write_csv(str_glue("{id}_{session}/caregiver_hip_synced.csv"))
-dscw %>% mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
-  write_csv(str_glue("{id}_{session}/caregiver_wrist_synced.csv"))
+
+if (process_cg) {
+  dsch <- dsch %>% filter(time_sync >= start_time, time_sync < end_time)
+  dscw <- dscw %>% filter(time_sync >= start_time, time_sync < end_time)
+  dsch %>% mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
+    write_csv(str_glue("{id}_{session}/caregiver_hip_synced.csv"))
+  dscw %>% mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
+    write_csv(str_glue("{id}_{session}/caregiver_wrist_synced.csv"))
+}
 
 print(str_glue("Successfully wrote synced IMU files to {id}_{session}/"))
 
