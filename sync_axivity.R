@@ -179,6 +179,19 @@ if (file.exists(str_glue("{id}_{session}/multiday_info.csv"))){
     dsrh %>% filter(time_sync >= start_time, time_sync < end_time)%>% 
       mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
       write_csv(str_glue("{id}_{session}/right_hip_synced_2.csv"))
+    
+    sync_time <- str_glue("{test_date} {sync_multiday$time_leg_sync_2}")
+    sync_time <- force_tz(as_datetime(start_time),"America/Los_Angeles")
+    
+    temp_la <- dsla %>% filter(time_sync >= (sync_time - minutes(2)), time_sync < (sync_time + minutes(1)))
+    temp_ra <- dsra %>% filter(time_sync >= (sync_time - minutes(2)), time_sync < (sync_time + minutes(1)))
+    temp_lh <- dslh %>% filter(time_sync >= (sync_time - minutes(2)), time_sync < (sync_time + minutes(1)))
+    temp_rh <- dsrh %>% filter(time_sync >= (sync_time - minutes(2)), time_sync < (sync_time + minutes(1)))
+    ggplot() + 
+      geom_line(data = temp_la, aes(x = time_sync, y = acc_x+3), alpha = .4, color = "red") +
+      geom_line(data = temp_ra, aes(x = time_sync, y = acc_x+1), alpha = .4, color = "blue") +
+      geom_line(data = temp_lh, aes(x = time_sync, y = acc_x-1), alpha = .4, color = "green") +
+      geom_line(data = temp_rh, aes(x = time_sync, y = acc_x-3), alpha = .4, color = "orange")
   }
   
 }
