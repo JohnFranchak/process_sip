@@ -2,8 +2,8 @@ args <- commandArgs(trailingOnly = TRUE)
 
 if (length(args) == 0) {
   print("No id or session supplied; using test parameters instead")
-  id <- 21
-  session <-  3
+  id <- 37
+  session <-  2
 } else {
   id <- args[1]
   session <- args[2]

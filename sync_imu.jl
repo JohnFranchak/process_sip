@@ -12,15 +12,21 @@ if length(ARGS) > 0
     println("Creating motion features for id " * ARGS[1] * " session " * ARGS[2])
     const id = ARGS[1]
     const session = ARGS[2]
+    const day = ARGS[3]
 else
     # For interactive testing
-    const id = "12"
-    const session = "1"
+    const id = "37"
+    const session = "2"
+    const day = "2"
 end
 
 const run_start = now()
 
-const suffix = ""
+if day == ""
+    const suffix = ""
+else
+    const suffix = "_" * day
+end
 
 function assign(;s::AbstractString, v::Any)
 	s = Symbol(s)
@@ -36,7 +42,7 @@ end
 
 adjust_dst = 0
 function imu_file(;side, loc, suffix)
-    file = id * "_" * session * "/" * side * "_" * loc * suffix * "_synced.csv"
+    file = id * "_" * session * "/" * side * "_" * loc * "_synced" * suffix * ".csv"
     println(file)
     short_code = side[1] * loc[1]
     temp = CSV.read(file, DataFrame; header=["time",short_code*"accx",short_code*"accy",short_code*"accz",short_code*"gyrx",short_code*"gyry",short_code*"gyrz"], skipto=2)
@@ -322,71 +328,74 @@ const time_sec2 = Int64.(round.((time_sec.+2)./4))
 const time_sec3 = Int64.(round.((time_sec.+3)./4))
 
 windows = DataFrame(temp_time = temp_time, time_sec = time_sec, time_sec0 =  time_sec0,  time_sec1 = time_sec1,  time_sec2 = time_sec2,  time_sec3 = time_sec3)
-##
-# Read nap and exclude times
-file = id * "_" * session * "/session_info.csv"
-anno = CSV.read(file, DataFrame; missingstring = "NA")
-
-@chain anno begin
-    @transform! :time_nap_1_start = Date(windows.temp_time[1]) + :time_nap_1_start
-    @transform! :time_nap_1_end = Date(windows.temp_time[1]) + :time_nap_1_end
-    @transform! :time_nap_2_start = Date(windows.temp_time[1]) + :time_nap_2_start
-    @transform! :time_nap_2_end = Date(windows.temp_time[1]) + :time_nap_2_end
-    @transform! :time_nap_3_start = Date(windows.temp_time[1]) + :time_nap_3_start
-    @transform! :time_nap_3_end = Date(windows.temp_time[1]) + :time_nap_3_end
-    @transform! :time_nap_4_start = Date(windows.temp_time[1]) + :time_nap_4_start
-    @transform! :time_nap_4_end = Date(windows.temp_time[1]) + :time_nap_4_end
-    @transform! :time_nap_5_start = Date(windows.temp_time[1]) + :time_nap_5_start
-    @transform! :time_nap_5_end = Date(windows.temp_time[1]) + :time_nap_5_end
-    @transform! :time_nap_6_start = Date(windows.temp_time[1]) + :time_nap_6_start
-    @transform! :time_nap_6_end = Date(windows.temp_time[1]) + :time_nap_6_end
-    @transform! :time_off_1_start = Date(windows.temp_time[1]) + :time_off_1_start
-    @transform! :time_off_1_end = Date(windows.temp_time[1]) + :time_off_1_end
-    @transform! :time_off_2_start = Date(windows.temp_time[1]) + :time_off_2_start
-    @transform! :time_off_2_end = Date(windows.temp_time[1]) + :time_off_2_end
-    @transform! :time_off_3_start = Date(windows.temp_time[1]) + :time_off_3_start
-    @transform! :time_off_3_end = Date(windows.temp_time[1]) + :time_off_3_end
-    @transform! :time_off_4_start = Date(windows.temp_time[1]) + :time_off_4_start
-    @transform! :time_off_4_end = Date(windows.temp_time[1]) + :time_off_4_end
-    @transform! :time_off_5_start = Date(windows.temp_time[1]) + :time_off_5_start
-    @transform! :time_off_5_end = Date(windows.temp_time[1]) + :time_off_5_end
-    @transform! :time_off_6_start = Date(windows.temp_time[1]) + :time_off_6_start
-    @transform! :time_off_6_end = Date(windows.temp_time[1]) + :time_off_6_end
-    @transform! :time_off_7_start = Date(windows.temp_time[1]) + :time_off_7_start
-    @transform! :time_off_7_end = Date(windows.temp_time[1]) + :time_off_7_end
-    @transform! :time_off_8_start = Date(windows.temp_time[1]) + :time_off_8_start
-    @transform! :time_off_8_end = Date(windows.temp_time[1]) + :time_off_8_end
-    @transform! :time_off_9_start = Date(windows.temp_time[1]) + :time_off_9_start
-    @transform! :time_off_9_end = Date(windows.temp_time[1]) + :time_off_9_end
-    @transform! :time_off_10_start = Date(windows.temp_time[1]) + :time_off_10_start
-    @transform! :time_off_10_end = Date(windows.temp_time[1]) + :time_off_10_end
-    @transform! :time_leg_on = Date(windows.temp_time[1]) + :time_leg_on
-    @transform! :time_leg_off = Date(windows.temp_time[1]) + :time_leg_off
-end
-
-windows[!, :time_leg_on] .= anno.time_leg_on[1]
-windows[!, :time_leg_off] .= anno.time_leg_off[1]
-
-nap_starts = dropmissing(stack(select(select(anno, r"nap"),r"start"),1:6))
-nap_ends = dropmissing(stack(select(select(anno, r"nap"),r"end"),1:6))
 windows[!, :nap_period] .= 0
-if  nrow(nap_starts) > 0
-     for i in axes(nap_starts,1)
-         @transform!(windows, @subset(:temp_time >= nap_starts.value[i] && :temp_time <= nap_ends.value[i]), :nap_period = 1)
-     end
-end
-
-exclude_starts = dropmissing(stack(select(select(select(anno, r"off"),r"start"),r"time"),1:10))
-exclude_ends = dropmissing(stack(select(select(select(anno, r"off"),r"end"),r"time"),1:10))
 windows[!, :exclude_period] .= 0
-if  nrow(exclude_starts) > 0
-     for i in axes(exclude_starts,1)
-         @transform!(windows, @subset(:temp_time >= exclude_starts.value[i] && :temp_time <= exclude_ends.value[i]), :exclude_period = 1)
-     end
-end
-
 ##
-CSV.write(id * "_" * session *"/" * "windows_4s.csv", windows)
+# Read nap and exclude times ONLY FOR DAY 1
+if day == ""
+    file = id * "_" * session * "/session_info.csv"
+    anno = CSV.read(file, DataFrame; missingstring = "NA")
+
+    @chain anno begin
+        @transform! :time_nap_1_start = Date(windows.temp_time[1]) + :time_nap_1_start
+        @transform! :time_nap_1_end = Date(windows.temp_time[1]) + :time_nap_1_end
+        @transform! :time_nap_2_start = Date(windows.temp_time[1]) + :time_nap_2_start
+        @transform! :time_nap_2_end = Date(windows.temp_time[1]) + :time_nap_2_end
+        @transform! :time_nap_3_start = Date(windows.temp_time[1]) + :time_nap_3_start
+        @transform! :time_nap_3_end = Date(windows.temp_time[1]) + :time_nap_3_end
+        @transform! :time_nap_4_start = Date(windows.temp_time[1]) + :time_nap_4_start
+        @transform! :time_nap_4_end = Date(windows.temp_time[1]) + :time_nap_4_end
+        @transform! :time_nap_5_start = Date(windows.temp_time[1]) + :time_nap_5_start
+        @transform! :time_nap_5_end = Date(windows.temp_time[1]) + :time_nap_5_end
+        @transform! :time_nap_6_start = Date(windows.temp_time[1]) + :time_nap_6_start
+        @transform! :time_nap_6_end = Date(windows.temp_time[1]) + :time_nap_6_end
+        @transform! :time_off_1_start = Date(windows.temp_time[1]) + :time_off_1_start
+        @transform! :time_off_1_end = Date(windows.temp_time[1]) + :time_off_1_end
+        @transform! :time_off_2_start = Date(windows.temp_time[1]) + :time_off_2_start
+        @transform! :time_off_2_end = Date(windows.temp_time[1]) + :time_off_2_end
+        @transform! :time_off_3_start = Date(windows.temp_time[1]) + :time_off_3_start
+        @transform! :time_off_3_end = Date(windows.temp_time[1]) + :time_off_3_end
+        @transform! :time_off_4_start = Date(windows.temp_time[1]) + :time_off_4_start
+        @transform! :time_off_4_end = Date(windows.temp_time[1]) + :time_off_4_end
+        @transform! :time_off_5_start = Date(windows.temp_time[1]) + :time_off_5_start
+        @transform! :time_off_5_end = Date(windows.temp_time[1]) + :time_off_5_end
+        @transform! :time_off_6_start = Date(windows.temp_time[1]) + :time_off_6_start
+        @transform! :time_off_6_end = Date(windows.temp_time[1]) + :time_off_6_end
+        @transform! :time_off_7_start = Date(windows.temp_time[1]) + :time_off_7_start
+        @transform! :time_off_7_end = Date(windows.temp_time[1]) + :time_off_7_end
+        @transform! :time_off_8_start = Date(windows.temp_time[1]) + :time_off_8_start
+        @transform! :time_off_8_end = Date(windows.temp_time[1]) + :time_off_8_end
+        @transform! :time_off_9_start = Date(windows.temp_time[1]) + :time_off_9_start
+        @transform! :time_off_9_end = Date(windows.temp_time[1]) + :time_off_9_end
+        @transform! :time_off_10_start = Date(windows.temp_time[1]) + :time_off_10_start
+        @transform! :time_off_10_end = Date(windows.temp_time[1]) + :time_off_10_end
+        @transform! :time_leg_on = Date(windows.temp_time[1]) + :time_leg_on
+        @transform! :time_leg_off = Date(windows.temp_time[1]) + :time_leg_off
+    end
+
+    windows[!, :time_leg_on] .= anno.time_leg_on[1]
+    windows[!, :time_leg_off] .= anno.time_leg_off[1]
+
+    nap_starts = dropmissing(stack(select(select(anno, r"nap"),r"start"),1:6))
+    nap_ends = dropmissing(stack(select(select(anno, r"nap"),r"end"),1:6))
+    
+    if  nrow(nap_starts) > 0
+        for i in axes(nap_starts,1)
+            @transform!(windows, @subset(:temp_time >= nap_starts.value[i] && :temp_time <= nap_ends.value[i]), :nap_period = 1)
+        end
+    end
+
+    exclude_starts = dropmissing(stack(select(select(select(anno, r"off"),r"start"),r"time"),1:10))
+    exclude_ends = dropmissing(stack(select(select(select(anno, r"off"),r"end"),r"time"),1:10))
+    if  nrow(exclude_starts) > 0
+        for i in axes(exclude_starts,1)
+            @transform!(windows, @subset(:temp_time >= exclude_starts.value[i] && :temp_time <= exclude_ends.value[i]), :exclude_period = 1)
+        end
+    end
+
+end
+##
+CSV.write(id * "_" * session *"/" * "windows_4s" * suffix * ".csv", windows)
 
 ds.time_sec0 = time_sec0
 slide0 = slide_calc(ds)
@@ -402,7 +411,7 @@ slide = vcat(slide0, slide1, slide2, slide3)
 sort!(slide, :time_start)
 @subset!(slide, :time_sec0 > 1)
 select!(slide, Not(:time_sec0))
-CSV.write(id * "_" * session *"/" * "mot_features_infant_4s.csv", slide)
+CSV.write(id * "_" * session *"/" * "mot_features_infant_4s" * suffix * ".csv", slide)
 
 function add_session_wear_labels!(df::DataFrame; acc_threshold::Float64=0.02, gyro_threshold::Float64=1.0)
     sensors = ["lh", "rh", "la", "ra"]
@@ -454,8 +463,10 @@ model_rest = load_object("group_model_restraint_GA.jld2")
 ds_out.restraint = DecisionTree.predict(model_rest, features)
 
 # WRITE CSV
-CSV.write(id * "_" * session * "/" * "infant_position_predictions_4s.csv", ds_out)
+CSV.write(id * "_" * session * "/" * "infant_position_predictions_4s" * suffix * ".csv", ds_out)
 
-println("Wrote windows, motion features, and infant predictions for id " * id * " session " * session)
+if day == "" day_label = "1" else day_label = day end
+
+println("Wrote windows, motion features, and infant predictions for id " * id * " session " * session * " day " * day_label)
 println("Run took ", Dates.canonicalize(Dates.CompoundPeriod(now()-run_start)))
 
