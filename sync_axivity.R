@@ -2,8 +2,8 @@ args <- commandArgs(trailingOnly = TRUE)
 
 if (length(args) == 0) {
   print("No id or session supplied; using test parameters instead")
-  id <- 34
-  session <-  2
+  id <- 21
+  session <-  3
 } else {
   id <- args[1]
   session <- args[2]
@@ -131,17 +131,17 @@ end_time <- force_tz(as_datetime(end_time),"America/Los_Angeles")
 print(str_glue("Read 6 IMU files; filtering data from {start_time} to {end_time}"))
 
 # Turn into something we can analyze in Julia
-dsra <- dsra %>% filter(time_sync >= start_time, time_sync < end_time)
-dsla <- dsla %>% filter(time_sync >= start_time, time_sync < end_time)
-dsrh <- dsrh %>% filter(time_sync >= start_time, time_sync < end_time)
-dslh <- dslh %>% filter(time_sync >= start_time, time_sync < end_time)
-dsla %>% mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
+dsla %>% filter(time_sync >= start_time, time_sync < end_time) %>% 
+  mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
   write_csv(str_glue("{id}_{session}/left_ankle_synced.csv"))
-dsra %>% mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
+dsra %>% filter(time_sync >= start_time, time_sync < end_time)%>% 
+  mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
   write_csv(str_glue("{id}_{session}/right_ankle_synced.csv"))
-dslh %>% mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
+dslh %>% filter(time_sync >= start_time, time_sync < end_time)%>% 
+  mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
   write_csv(str_glue("{id}_{session}/left_hip_synced.csv"))
-dsrh %>% mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
+dsrh %>% filter(time_sync >= start_time, time_sync < end_time)%>% 
+  mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
   write_csv(str_glue("{id}_{session}/right_hip_synced.csv"))
 
 if (process_cg) {
@@ -154,4 +154,32 @@ if (process_cg) {
 }
 
 print(str_glue("Successfully wrote synced IMU files to {id}_{session}/"))
+
+if (file.exists(str_glue("{id}_{session}/multiday_info.csv"))){
+  print("Processing multiday IMU")
+  sync_multiday <- read_csv(str_glue("{id}_{session}/multiday_info.csv"))
+  
+  if (sync_multiday$use_day_2___1 == 1) {
+    test_date <- as.character(as_date(sync_multiday$date_day_2))
+    start_time <- str_glue("{test_date} {sync_multiday$time_leg_on_2}")
+    start_time <- force_tz(as_datetime(start_time),"America/Los_Angeles")
+    
+    end_time <- str_glue("{test_date} {sync_multiday$time_leg_off_2}")
+    end_time <- force_tz(as_datetime(end_time),"America/Los_Angeles")
+    
+    dsla %>% filter(time_sync >= start_time, time_sync < end_time) %>% 
+      mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
+      write_csv(str_glue("{id}_{session}/left_ankle_synced_2.csv"))
+    dsra %>% filter(time_sync >= start_time, time_sync < end_time)%>% 
+      mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
+      write_csv(str_glue("{id}_{session}/right_ankle_synced_2.csv"))
+    dslh %>% filter(time_sync >= start_time, time_sync < end_time)%>% 
+      mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
+      write_csv(str_glue("{id}_{session}/left_hip_synced_2.csv"))
+    dsrh %>% filter(time_sync >= start_time, time_sync < end_time)%>% 
+      mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
+      write_csv(str_glue("{id}_{session}/right_hip_synced_2.csv"))
+  }
+  
+}
 
