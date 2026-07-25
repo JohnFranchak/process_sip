@@ -2,8 +2,8 @@ args <- commandArgs(trailingOnly = TRUE)
 
 if (length(args) == 0) {
   print("No id or session supplied; using test parameters instead")
-  id <- 37
-  session <-  2
+  id <- 21
+  session <-  3
 } else {
   id <- args[1]
   session <- args[2]
@@ -160,6 +160,10 @@ if (file.exists(str_glue("{id}_{session}/multiday_info.csv"))){
   sync_multiday <- read_csv(str_glue("{id}_{session}/multiday_info.csv"))
   
   if (sync_multiday$use_day_2___1 == 1) {
+    diff_lh_2 <- as_datetime(sync_multiday$sync_point_la_2) - as_datetime(sync_multiday$sync_point_lh_2)
+    diff_ra_2 <- as_datetime(sync_multiday$sync_point_la_2) - as_datetime(sync_multiday$sync_point_ra_2)
+    diff_rh_2 <- as_datetime(sync_multiday$sync_point_la_2) - as_datetime(sync_multiday$sync_point_rh_2)
+    
     test_date <- as.character(as_date(sync_multiday$date_day_2))
     start_time <- str_glue("{test_date} {sync_multiday$time_leg_on_2}")
     start_time <- force_tz(as_datetime(start_time),"America/Los_Angeles")
@@ -170,28 +174,31 @@ if (file.exists(str_glue("{id}_{session}/multiday_info.csv"))){
     dsla %>% filter(time_sync >= start_time, time_sync < end_time) %>% 
       mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
       write_csv(str_glue("{id}_{session}/left_ankle_synced_2.csv"))
-    dsra %>% filter(time_sync >= start_time, time_sync < end_time)%>% 
+    dsra %>% mutate(time_sync = time_sync - diff_ra + diff_ra_2) %>% 
+      filter(time_sync >= start_time, time_sync < end_time) %>% 
       mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
       write_csv(str_glue("{id}_{session}/right_ankle_synced_2.csv"))
-    dslh %>% filter(time_sync >= start_time, time_sync < end_time)%>% 
+    dslh %>% mutate(time_sync = time_sync - diff_lh + diff_lh_2) %>% 
+      filter(time_sync >= start_time, time_sync < end_time)%>% 
       mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
       write_csv(str_glue("{id}_{session}/left_hip_synced_2.csv"))
-    dsrh %>% filter(time_sync >= start_time, time_sync < end_time)%>% 
+    dsrh %>% mutate(time_sync = time_sync - diff_rh + diff_rh_2) %>% 
+      filter(time_sync >= start_time, time_sync < end_time)%>% 
       mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
       write_csv(str_glue("{id}_{session}/right_hip_synced_2.csv"))
     
     sync_time <- str_glue("{test_date} {sync_multiday$time_leg_sync_2}")
     sync_time <- force_tz(as_datetime(start_time),"America/Los_Angeles")
     
-    temp_la <- dsla %>% filter(time_sync >= (sync_time - minutes(2)), time_sync < (sync_time + minutes(1)))
-    temp_ra <- dsra %>% filter(time_sync >= (sync_time - minutes(2)), time_sync < (sync_time + minutes(1)))
-    temp_lh <- dslh %>% filter(time_sync >= (sync_time - minutes(2)), time_sync < (sync_time + minutes(1)))
-    temp_rh <- dsrh %>% filter(time_sync >= (sync_time - minutes(2)), time_sync < (sync_time + minutes(1)))
+    temp_la <- dsla %>% filter(time_sync >= (sync_time - minutes(1)), time_sync < (sync_time + minutes(1)))
+    temp_ra <- dsra %>% mutate(time_sync = time_sync - diff_ra + diff_ra_2) %>% filter(time_sync >= (sync_time - minutes(1)), time_sync < (sync_time + minutes(1)))
+    temp_lh <- dslh %>% mutate(time_sync = time_sync - diff_lh + diff_lh_2) %>% filter(time_sync >= (sync_time - minutes(1)), time_sync < (sync_time + minutes(1)))
+    temp_rh <- dsrh %>% mutate(time_sync = time_sync - diff_rh + diff_rh_2) %>% filter(time_sync >= (sync_time - minutes(1)), time_sync < (sync_time + minutes(1)))
     ggplot() + 
-      geom_line(data = temp_la, aes(x = time_sync, y = acc_x+3), alpha = .4, color = "red") +
-      geom_line(data = temp_ra, aes(x = time_sync, y = acc_x+1), alpha = .4, color = "blue") +
-      geom_line(data = temp_lh, aes(x = time_sync, y = acc_x-1), alpha = .4, color = "green") +
-      geom_line(data = temp_rh, aes(x = time_sync, y = acc_x-3), alpha = .4, color = "orange")
+      geom_line(data = temp_la, aes(x = time_sync, y = sqrt(acc_x^2 + acc_y^2 + acc_z^2)+7), alpha = .4, color = "red") +
+      geom_line(data = temp_ra, aes(x = time_sync, y = sqrt(acc_x^2 + acc_y^2 + acc_z^2)+3), alpha = .4, color = "blue") +
+      geom_line(data = temp_lh, aes(x = time_sync, y = sqrt(acc_x^2 + acc_y^2 + acc_z^2)-1), alpha = .4, color = "green") +
+      geom_line(data = temp_rh, aes(x = time_sync, y = sqrt(acc_x^2 + acc_y^2 + acc_z^2)-5), alpha = .4, color = "orange")
   }
   
 }
