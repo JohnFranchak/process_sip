@@ -3,8 +3,8 @@ args <- commandArgs(trailingOnly = TRUE)
 if (length(args) == 0) {
   print("No id or session supplied; using test parameters instead")
   # Interaction for testing
-  id <- 21
-  session <-  3
+  id <- 37
+  session <-  2
 } else {
   id <- args[1]
   session <- args[2]
@@ -31,9 +31,10 @@ if (nrow(ds) == 0) {
   print(str_glue("Successfully wrote session_info.csv to {id}_{session}/"))
 }
 
-ds_multiday <- redcap_read(redcap_uri = uri, records = id, events = session_string, token = api_token, forms = c("day2_notes"), guess_type = F) %>% 
+ds_multiday <- redcap_read(redcap_uri = uri, records = id, events = session_string, token = api_token, 
+                           forms = c("day2_notes","day3_notes"), guess_type = F) %>% 
   .[["data"]] 
-if (ds_multiday$use_day_2___1 == 1) {
+if (ds_multiday$use_day_2___1 == 1 | ds_multiday$use_day_3___1 == 1) {
   write_csv(ds_multiday, str_glue("{id}_{session}/multiday_info.csv"))
   print("Found multi-day information in REDCap")
 }

@@ -2,7 +2,7 @@
 opts = delimitedTextImportOptions("NumVariables", 7);
 
 % Specify range and delimiter
-opts.DataLines = [1, 8000000];
+opts.DataLines = [8000000, 15000000];
 opts.Delimiter = ",";
 
 % Specify column names and types
@@ -16,12 +16,14 @@ opts.EmptyLineRule = "read";
 % Specify variable properties
 opts = setvaropts(opts, "Time", "InputFormat", "yyyy-MM-dd HH:mm:ss.SSS");
 
-ppt = "21";
+ppt = "37";
 
 %%
 % Import the LEFT ANKLE
 leftankle = readtable(strcat(ppt,"_LA.csv"), opts);
 leftankle.mag = sqrt(leftankle.X.^2 + leftankle.Y.^2 + leftankle.Z.^2);
+plot(leftankle.Time, leftankle.mag)
+%%
 close all
 clf
 tiledlayout(4,1)
@@ -39,7 +41,9 @@ linkaxes([ax1 ax2 ax3 ax4],'x')
 % Import the RIGHT ANKLE
 rightankle = readtable(strcat(ppt,"_RA.csv"), opts);
 rightankle.mag = sqrt(rightankle.X.^2 + rightankle.Y.^2 + rightankle.Z.^2);
+plot(rightankle.Time, rightankle.mag)
 
+%%
 close all
 clf
 tiledlayout(4,1)
@@ -57,7 +61,8 @@ linkaxes([ax1 ax2 ax3 ax4],'x')
 % Import the LEFT HIP
 lefthip = readtable(strcat(ppt,"_LH.csv"), opts);
 lefthip.mag = sqrt(lefthip.X.^2 + lefthip.Y.^2 + lefthip.Z.^2);
-
+plot(lefthip.Time, lefthip.mag)
+%%
 close all
 clf
 tiledlayout(4,1)
@@ -76,7 +81,8 @@ linkaxes([ax1 ax2 ax3 ax4],'x')
 % Import the RIGHT HIP
 righthip = readtable(strcat(ppt,"_RH.csv"), opts);
 righthip.mag = sqrt(righthip.X.^2 + righthip.Y.^2 + righthip.Z.^2);
-
+plot(righthip.Time, righthip.mag)
+%%
 close all
 clf
 tiledlayout(4,1)

@@ -17,7 +17,7 @@ else
     # For interactive testing
     const id = "37"
     const session = "2"
-    const day = "2"
+    const day = ""
 end
 
 const run_start = now()

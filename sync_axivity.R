@@ -2,8 +2,8 @@ args <- commandArgs(trailingOnly = TRUE)
 
 if (length(args) == 0) {
   print("No id or session supplied; using test parameters instead")
-  id <- 21
-  session <-  3
+  id <- 37
+  session <-  2
 } else {
   id <- args[1]
   session <- args[2]
@@ -198,7 +198,53 @@ if (file.exists(str_glue("{id}_{session}/multiday_info.csv"))){
       geom_line(data = temp_la, aes(x = time_sync, y = sqrt(acc_x^2 + acc_y^2 + acc_z^2)+7), alpha = .4, color = "red") +
       geom_line(data = temp_ra, aes(x = time_sync, y = sqrt(acc_x^2 + acc_y^2 + acc_z^2)+3), alpha = .4, color = "blue") +
       geom_line(data = temp_lh, aes(x = time_sync, y = sqrt(acc_x^2 + acc_y^2 + acc_z^2)-1), alpha = .4, color = "green") +
-      geom_line(data = temp_rh, aes(x = time_sync, y = sqrt(acc_x^2 + acc_y^2 + acc_z^2)-5), alpha = .4, color = "orange")
+      geom_line(data = temp_rh, aes(x = time_sync, y = sqrt(acc_x^2 + acc_y^2 + acc_z^2)-5), alpha = .4, color = "orange") +
+      ggtitle("Day 2 sync")
+    print("Wrote Day 2")
+  }
+  
+  if (sync_multiday$use_day_3___1 == 1) {
+    diff_lh_3 <- as_datetime(sync_multiday$sync_point_la_3) - as_datetime(sync_multiday$sync_point_lh_3)
+    diff_ra_3 <- as_datetime(sync_multiday$sync_point_la_3) - as_datetime(sync_multiday$sync_point_ra_3)
+    diff_rh_3 <- as_datetime(sync_multiday$sync_point_la_3) - as_datetime(sync_multiday$sync_point_rh_3)
+    
+    test_date <- as.character(as_date(sync_multiday$date_day_3))
+    start_time <- str_glue("{test_date} {sync_multiday$time_leg_on_3}")
+    start_time <- force_tz(as_datetime(start_time),"America/Los_Angeles")
+    
+    end_time <- str_glue("{test_date} {sync_multiday$time_leg_off_3}")
+    end_time <- force_tz(as_datetime(end_time),"America/Los_Angeles")
+    
+    dsla %>% filter(time_sync >= start_time, time_sync < end_time) %>% 
+      mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
+      write_csv(str_glue("{id}_{session}/left_ankle_synced_3.csv"))
+    dsra %>% mutate(time_sync = time_sync - diff_ra + diff_ra_3) %>% 
+      filter(time_sync >= start_time, time_sync < end_time) %>% 
+      mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
+      write_csv(str_glue("{id}_{session}/right_ankle_synced_3.csv"))
+    dslh %>% mutate(time_sync = time_sync - diff_lh + diff_lh_3) %>% 
+      filter(time_sync >= start_time, time_sync < end_time)%>% 
+      mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
+      write_csv(str_glue("{id}_{session}/left_hip_synced_3.csv"))
+    dsrh %>% mutate(time_sync = time_sync - diff_rh + diff_rh_3) %>% 
+      filter(time_sync >= start_time, time_sync < end_time)%>% 
+      mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
+      write_csv(str_glue("{id}_{session}/right_hip_synced_3.csv"))
+    
+    sync_time <- str_glue("{test_date} {sync_multiday$time_leg_sync_3}")
+    sync_time <- force_tz(as_datetime(start_time),"America/Los_Angeles")
+    
+    temp_la <- dsla %>% filter(time_sync >= (sync_time - minutes(1)), time_sync < (sync_time + minutes(1)))
+    temp_ra <- dsra %>% mutate(time_sync = time_sync - diff_ra + diff_ra_3) %>% filter(time_sync >= (sync_time - minutes(1)), time_sync < (sync_time + minutes(1)))
+    temp_lh <- dslh %>% mutate(time_sync = time_sync - diff_lh + diff_lh_3) %>% filter(time_sync >= (sync_time - minutes(1)), time_sync < (sync_time + minutes(1)))
+    temp_rh <- dsrh %>% mutate(time_sync = time_sync - diff_rh + diff_rh_3) %>% filter(time_sync >= (sync_time - minutes(1)), time_sync < (sync_time + minutes(1)))
+    ggplot() + 
+      geom_line(data = temp_la, aes(x = time_sync, y = sqrt(acc_x^2 + acc_y^2 + acc_z^2)+7), alpha = .4, color = "red") +
+      geom_line(data = temp_ra, aes(x = time_sync, y = sqrt(acc_x^2 + acc_y^2 + acc_z^2)+3), alpha = .4, color = "blue") +
+      geom_line(data = temp_lh, aes(x = time_sync, y = sqrt(acc_x^2 + acc_y^2 + acc_z^2)-1), alpha = .4, color = "green") +
+      geom_line(data = temp_rh, aes(x = time_sync, y = sqrt(acc_x^2 + acc_y^2 + acc_z^2)-5), alpha = .4, color = "orange") + 
+      ggtitle("Day 3 sync")
+    print("Wrote Day 3")
   }
   
 }
