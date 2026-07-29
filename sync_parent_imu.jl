@@ -241,10 +241,14 @@ temp_time = ds.time
     @transform! :cg_off_5_end = Date(windows.temp_time[1]) + :cg_off_5_end
     @transform! :cg_off_6_start = Date(windows.temp_time[1]) + :cg_off_6_start
     @transform! :cg_off_6_end = Date(windows.temp_time[1]) + :cg_off_6_end
+    @transform! :cg_off_7_start = Date(windows.temp_time[1]) + :cg_off_7_start
+    @transform! :cg_off_7_end = Date(windows.temp_time[1]) + :cg_off_7_end
+    @transform! :cg_off_8_start = Date(windows.temp_time[1]) + :cg_off_8_start
+    @transform! :cg_off_8_end = Date(windows.temp_time[1]) + :cg_off_8_end
 end
 
-exclude_starts = dropmissing(stack(select(select(select(anno, r"off"),r"start"),r"cg"),1:6))
-exclude_ends = dropmissing(stack(select(select(select(anno, r"off"),r"end"),r"cg"),1:6))
+exclude_starts = dropmissing(stack(select(select(select(anno, r"off"),r"start"),r"cg"),1:8))
+exclude_ends = dropmissing(stack(select(select(select(anno, r"off"),r"end"),r"cg"),1:8))
 
 
 ds.time_sec_rounded = round.(datetime2unix.(temp_time) .- datetime2unix.(windows.temp_time[1]), digits = 2)

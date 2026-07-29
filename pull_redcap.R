@@ -21,7 +21,7 @@ session_string  <-  as.character(factor(session, levels = 1:4, labels = c("visit
 print(str_glue("Pulling REDCap data for {id} {session_string}"))
 
 ds <- redcap_read(redcap_uri = uri, token = api_token, records = id, events = session_string, forms = c("session_notes"), guess_type = F) %>% 
-  .[["data"]] %>% select(study_id, redcap_event_name, time_gopro_start:cg_off_6_reason)
+  .[["data"]] %>% select(study_id, redcap_event_name, time_gopro_start:cg_off_8_reason)
 
 if (nrow(ds) == 0) {
   print(str_glue("No REDCap data found -- correct and re-run the script"))
