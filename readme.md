@@ -1,7 +1,8 @@
 # Sensors in Person Data Processing Scripts
 John Franchak, 1/29/2026
-- 2/10/2026: Updated installation process to use julia project.toml
-- 2/20/2026: Included caregiver IMU files
+- 02/10/2026: Updated installation process to use julia project.toml
+- 02/20/2026: Included caregiver IMU files
+- 08/03/2026: Supports processing for multiple day recordings
 
 ## Requirements
 - Julia version 1.12.3
