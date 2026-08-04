@@ -15,14 +15,14 @@ if length(ARGS) > 0
     const day = ARGS[3]
 else
     # For interactive testing
-    const id = "37"
+    const id = "45"
     const session = "2"
-    const day = ""
+    const day = "1"
 end
 
 const run_start = now()
 
-if day == ""
+if day == "1"
     const suffix = ""
 else
     const suffix = "_" * day

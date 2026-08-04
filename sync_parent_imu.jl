@@ -14,8 +14,8 @@ if length(ARGS) > 0
     const session = ARGS[2]
 else
     # For interactive testing
-    const id = "12"
-    const session = "1"
+    const id = "45"
+    const session = "2"
 end
 
 const run_start = now()
@@ -177,7 +177,7 @@ function calc_between_diff(data; abs_suffix = false)
 end
 
 function slide_calc(ds_temp)
-    dropmissing!(ds_temp)
+    ds_temp = dropmissing(ds_temp)
     times = @combine(@groupby(ds_temp, :time_sec0), "time_start" = first(:time, 1))
     simple_stats = @combine(@groupby(ds_temp, :time_sec0), begin
         "mean_{}" = mean({r"acc|gyr"})
@@ -226,6 +226,7 @@ windows = CSV.read(id * "_" * session * "/" * "windows_4s.csv", DataFrame)
 
 file = id * "_" * session * "/session_info.csv"
 anno = CSV.read(file, DataFrame; missingstring = "NA")
+ds = dropmissing(ds)
 temp_time = ds.time
 
 @chain anno begin
