@@ -14,8 +14,8 @@ if length(ARGS) > 0
     const session = ARGS[2]
 else
     # For interactive testing
-    const id = "12"
-    const session = "1"
+    const id = "45"
+    const session = "2"
 end
 
 const run_start = now()
@@ -177,7 +177,7 @@ function calc_between_diff(data; abs_suffix = false)
 end
 
 function slide_calc(ds_temp)
-    dropmissing!(ds_temp)
+    ds_temp = dropmissing(ds_temp)
     times = @combine(@groupby(ds_temp, :time_sec0), "time_start" = first(:time, 1))
     simple_stats = @combine(@groupby(ds_temp, :time_sec0), begin
         "mean_{}" = mean({r"acc|gyr"})
@@ -226,6 +226,7 @@ windows = CSV.read(id * "_" * session * "/" * "windows_4s.csv", DataFrame)
 
 file = id * "_" * session * "/session_info.csv"
 anno = CSV.read(file, DataFrame; missingstring = "NA")
+ds = dropmissing(ds)
 temp_time = ds.time
 
 @chain anno begin
@@ -241,10 +242,14 @@ temp_time = ds.time
     @transform! :cg_off_5_end = Date(windows.temp_time[1]) + :cg_off_5_end
     @transform! :cg_off_6_start = Date(windows.temp_time[1]) + :cg_off_6_start
     @transform! :cg_off_6_end = Date(windows.temp_time[1]) + :cg_off_6_end
+    @transform! :cg_off_7_start = Date(windows.temp_time[1]) + :cg_off_7_start
+    @transform! :cg_off_7_end = Date(windows.temp_time[1]) + :cg_off_7_end
+    @transform! :cg_off_8_start = Date(windows.temp_time[1]) + :cg_off_8_start
+    @transform! :cg_off_8_end = Date(windows.temp_time[1]) + :cg_off_8_end
 end
 
-exclude_starts = dropmissing(stack(select(select(select(anno, r"off"),r"start"),r"cg"),1:6))
-exclude_ends = dropmissing(stack(select(select(select(anno, r"off"),r"end"),r"cg"),1:6))
+exclude_starts = dropmissing(stack(select(select(select(anno, r"off"),r"start"),r"cg"),1:8))
+exclude_ends = dropmissing(stack(select(select(select(anno, r"off"),r"end"),r"cg"),1:8))
 
 
 ds.time_sec_rounded = round.(datetime2unix.(temp_time) .- datetime2unix.(windows.temp_time[1]), digits = 2)

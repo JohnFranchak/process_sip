@@ -2,7 +2,7 @@
 opts = delimitedTextImportOptions("NumVariables", 7);
 
 % Specify range and delimiter
-opts.DataLines = [1, 500000];
+opts.DataLines = [8000000, 15000000];
 opts.Delimiter = ",";
 
 % Specify column names and types
@@ -16,70 +16,86 @@ opts.EmptyLineRule = "read";
 % Specify variable properties
 opts = setvaropts(opts, "Time", "InputFormat", "yyyy-MM-dd HH:mm:ss.SSS");
 
-ppt = "16";
+ppt = "37";
 
 %%
 % Import the LEFT ANKLE
 leftankle = readtable(strcat(ppt,"_LA.csv"), opts);
-
+leftankle.mag = sqrt(leftankle.X.^2 + leftankle.Y.^2 + leftankle.Z.^2);
+plot(leftankle.Time, leftankle.mag)
+%%
 close all
 clf
-tiledlayout(3,1)
+tiledlayout(4,1)
 % First plot
 ax1 = nexttile;
-plot(leftankle.Time, leftankle.X)
+plot(leftankle.Time, leftankle.mag)
 ax2 = nexttile;
-plot(leftankle.Time, leftankle.Y)
+plot(leftankle.Time, leftankle.X)
 ax3 = nexttile;
+plot(leftankle.Time, leftankle.Y)
+ax4 = nexttile;
 plot(leftankle.Time, leftankle.Z)
-linkaxes([ax1 ax2 ax3],'x')
+linkaxes([ax1 ax2 ax3 ax4],'x')
 %%
 % Import the RIGHT ANKLE
 rightankle = readtable(strcat(ppt,"_RA.csv"), opts);
+rightankle.mag = sqrt(rightankle.X.^2 + rightankle.Y.^2 + rightankle.Z.^2);
+plot(rightankle.Time, rightankle.mag)
 
+%%
 close all
 clf
-tiledlayout(3,1)
+tiledlayout(4,1)
 % First plot
 ax1 = nexttile;
-plot(rightankle.Time, rightankle.X)
+plot(rightankle.Time, rightankle.mag)
 ax2 = nexttile;
-plot(rightankle.Time, rightankle.Y)
+plot(rightankle.Time, rightankle.X)
 ax3 = nexttile;
+plot(rightankle.Time, rightankle.Y)
+ax4 = nexttile;
 plot(rightankle.Time, rightankle.Z)
-linkaxes([ax1 ax2 ax3],'x')
+linkaxes([ax1 ax2 ax3 ax4],'x')
 %%
 % Import the LEFT HIP
 lefthip = readtable(strcat(ppt,"_LH.csv"), opts);
-
+lefthip.mag = sqrt(lefthip.X.^2 + lefthip.Y.^2 + lefthip.Z.^2);
+plot(lefthip.Time, lefthip.mag)
+%%
 close all
 clf
-tiledlayout(3,1)
+tiledlayout(4,1)
 % First plot
 ax1 = nexttile;
-plot(lefthip.Time, lefthip.X)
+plot(lefthip.Time, lefthip.mag)
 ax2 = nexttile;
-plot(lefthip.Time, lefthip.Y)
+plot(lefthip.Time, lefthip.X)
 ax3 = nexttile;
+plot(lefthip.Time, lefthip.Y)
+ax4 = nexttile;
 plot(lefthip.Time, lefthip.Z)
-linkaxes([ax1 ax2 ax3],'x')
+linkaxes([ax1 ax2 ax3 ax4],'x')
 
 %%
 % Import the RIGHT HIP
 righthip = readtable(strcat(ppt,"_RH.csv"), opts);
-
+righthip.mag = sqrt(righthip.X.^2 + righthip.Y.^2 + righthip.Z.^2);
+plot(righthip.Time, righthip.mag)
+%%
 close all
 clf
-tiledlayout(3,1)
+tiledlayout(4,1)
 % First plot
 ax1 = nexttile;
-plot(righthip.Time, righthip.X)
+plot(righthip.Time, righthip.mag)
 ax2 = nexttile;
-plot(righthip.Time, righthip.Y)
+plot(righthip.Time, righthip.X)
 ax3 = nexttile;
+plot(righthip.Time, righthip.Y)
+ax4 = nexttile;
 plot(righthip.Time, righthip.Z)
-linkaxes([ax1 ax2 ax3],'x')
-
+linkaxes([ax1 ax2 ax3 ax4],'x')
 %%
 % Import the CAREGIVER WRIST
 lefthip = readtable(strcat(ppt,"_CW.csv"), opts);
