@@ -13,8 +13,8 @@ opts.EmptyLineRule = "read";
 opts = setvaropts(opts, "Time", "InputFormat", "yyyy-MM-dd HH:mm:ss.SSS");
 
 % SET THE PARTICIPANT AND EXPECTED SYNC POINT TIME
-ppt = "45";
-targetTime = datetime("2026-08-01 09:09:39", "InputFormat", "yyyy-MM-dd HH:mm:ss");
+ppt = "50";
+targetTime = datetime("2026-09-06 13:11:00", "InputFormat", "yyyy-MM-dd HH:mm:ss");
 
 
 leftankle = readtable(strcat(ppt,"_LA.csv"), opts);
@@ -29,11 +29,11 @@ lefthip.mag = sqrt(lefthip.X.^2 + lefthip.Y.^2 + lefthip.Z.^2);
 righthip = readtable(strcat(ppt,"_RH.csv"), opts);
 righthip.mag = sqrt(righthip.X.^2 + righthip.Y.^2 + righthip.Z.^2);
 
-cgwrist = readtable(strcat(ppt,"_CW.csv"), opts);
-cgwrist.mag = sqrt(cgwrist.X.^2 + cgwrist.Y.^2 + cgwrist.Z.^2);
-
-cghip = readtable(strcat(ppt,"_CH.csv"), opts);
-cghip.mag = sqrt(cghip.X.^2 + cghip.Y.^2 + cghip.Z.^2);
+% cgwrist = readtable(strcat(ppt,"_CW.csv"), opts);
+% cgwrist.mag = sqrt(cgwrist.X.^2 + cgwrist.Y.^2 + cgwrist.Z.^2);
+% 
+% cghip = readtable(strcat(ppt,"_CH.csv"), opts);
+% cghip.mag = sqrt(cghip.X.^2 + cghip.Y.^2 + cghip.Z.^2);
 
 halfWindow = minutes(15);
 startTime = targetTime - halfWindow;
@@ -59,12 +59,12 @@ idx = (righthip.Time >= startTime) & (righthip.Time <= endTime);
 plot(righthip.Time(idx), righthip.mag(idx));
 title(['Right Hip']);
 
-figure;
-idx = (cgwrist.Time >= startTime) & (cgwrist.Time <= endTime);
-plot(cgwrist.Time(idx), cgwrist.mag(idx));
-title(['CG Wrist']);
-
-figure;
-idx = (cghip.Time >= startTime) & (cghip.Time <= endTime);
-plot(cghip.Time(idx), cghip.mag(idx));
-title(['CG Hip']);
+% figure;
+% idx = (cgwrist.Time >= startTime) & (cgwrist.Time <= endTime);
+% plot(cgwrist.Time(idx), cgwrist.mag(idx));
+% title(['CG Wrist']);
+% 
+% figure;
+% idx = (cghip.Time >= startTime) & (cghip.Time <= endTime);
+% plot(cghip.Time(idx), cghip.mag(idx));
+% title(['CG Hip']);
