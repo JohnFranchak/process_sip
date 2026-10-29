@@ -1,22 +1,22 @@
 %% SET THE PARTICIPANT AND EXPECTED SYNC POINT TIME
 ppt = "62";
-targetTime = datetime("2026-09-23 12:25:00", "InputFormat", "yyyy-MM-dd HH:mm:ss");
+targetTime = datetime("2026-09-23 12:25:28", "InputFormat", "yyyy-MM-dd HH:mm:ss");
 
 halfWindow = minutes(8);
 startTime  = targetTime - halfWindow;
 endTime    = targetTime + halfWindow;
 
-%% Read only the target time window using byte-offset binary search
+% Read only the target time window using byte-offset binary search
 leftankle  = read_time_window(strcat(ppt, "_LA.csv"), startTime, endTime);
 rightankle = read_time_window(strcat(ppt, "_RA.csv"), startTime, endTime);
 lefthip    = read_time_window(strcat(ppt, "_LH.csv"), startTime, endTime);
 righthip   = read_time_window(strcat(ppt, "_RH.csv"), startTime, endTime);
 
 % Uncomment if caregiver sensors are present:
-% cgwrist  = read_time_window(strcat(ppt, "_CW.csv"), startTime, endTime);
-% cghip    = read_time_window(strcat(ppt, "_CH.csv"), startTime, endTime);
+cgwrist  = read_time_window(strcat(ppt, "_CW.csv"), startTime, endTime);
+cghip    = read_time_window(strcat(ppt, "_CH.csv"), startTime, endTime);
 
-%% Plot each sensor
+% Plot each sensor
 figure;
 plot(leftankle.Time, leftankle.mag);
 title('Left Ankle');
@@ -37,15 +37,15 @@ plot(righthip.Time, righthip.mag);
 title('Right Hip');
 xlabel('Time'); ylabel('Magnitude (g)');
 
-% figure;
-% plot(cgwrist.Time, cgwrist.mag);
-% title('CG Wrist');
-% xlabel('Time'); ylabel('Magnitude (g)');
-%
-% figure;
-% plot(cghip.Time, cghip.mag);
-% title('CG Hip');
-% xlabel('Time'); ylabel('Magnitude (g)');
+figure;
+plot(cgwrist.Time, cgwrist.mag);
+title('CG Wrist');
+xlabel('Time'); ylabel('Magnitude (g)');
+
+figure;
+plot(cghip.Time, cghip.mag);
+title('CG Hip');
+xlabel('Time'); ylabel('Magnitude (g)');
 
 %% Local Helper Functions
 function T = read_time_window(filename, startTime, endTime)

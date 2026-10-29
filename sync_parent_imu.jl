@@ -9,7 +9,7 @@ using Pipe: @pipe
 println("Running in environment: ", Base.active_project())
 
 if length(ARGS) > 0
-    println("Creating motion features for id " * ARGS[1] * " session " * ARGS[2])
+    println("Creating CG motion features for id " * ARGS[1] * " session " * ARGS[2])
     const id = ARGS[1]
     const session = ARGS[2]
     const day = ARGS[3]
