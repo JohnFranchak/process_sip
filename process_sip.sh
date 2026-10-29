@@ -52,6 +52,25 @@ if [ -f "${id}_${session}/left_ankle_synced_3.csv" ] && \
     julia sync_imu.jl "$id" "$session" 3
 fi
 
+# Run sync_imu for day 4 if corresponding files exist
+if [ -f "${id}_${session}/left_ankle_synced_4.csv" ] && \
+   [ -f "${id}_${session}/left_hip_synced_4.csv" ] && \
+   [ -f "${id}_${session}/right_ankle_synced_4.csv" ] && \
+   [ -f "${id}_${session}/right_hip_synced_4.csv" ]; then
+    echo "Files for day 4 found. Running sync_imu.jl for day 4..."
+    julia sync_imu.jl "$id" "$session" 4
+fi
+
+# Run sync_imu for day 5 if corresponding files exist
+if [ -f "${id}_${session}/left_ankle_synced_5.csv" ] && \
+   [ -f "${id}_${session}/left_hip_synced_5.csv" ] && \
+   [ -f "${id}_${session}/right_ankle_synced_5.csv" ] && \
+   [ -f "${id}_${session}/right_hip_synced_5.csv" ]; then
+    echo "Files for day 5 found. Running sync_imu.jl for day 5..."
+    julia sync_imu.jl "$id" "$session" 5
+fi
+
+
 check_file "${id}_${session}/caregiver_hip_synced.csv"
 check_file "${id}_${session}/caregiver_wrist_synced.csv"
 julia sync_parent_imu.jl "$id" "$session"

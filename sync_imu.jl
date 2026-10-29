@@ -15,9 +15,9 @@ if length(ARGS) > 0
     const day = ARGS[3]
 else
     # For interactive testing
-    const id = "45"
-    const session = "2"
-    const day = "1"
+    const id = "62"
+    const session = "1"
+    const day = "5"
 end
 
 const run_start = now()
