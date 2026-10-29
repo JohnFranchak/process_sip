@@ -20,6 +20,9 @@ end
 
 const run_start = now()
 
+# Start loading model asynchronously in the background while features are calculated
+const model_task = Threads.@spawn load_object("group_model_parent_fast.jld2")
+
 const suffix = ""
 
 function assign(;s::AbstractString, v::Any)
@@ -342,8 +345,8 @@ end
 #leftjoin!(ds_out, windows, on = :time_start => :temp_time)
 
 # PREDICT FROM MODEL
-model = load_object("group_model_parent.jld2")
 features = Matrix(dropmissing(slide[:,Not(["time_start", "cg_wear_status"])]))
+model = fetch(model_task)
 ds_out.pos = DecisionTree.predict(model, features)
 
 # WRITE CSV

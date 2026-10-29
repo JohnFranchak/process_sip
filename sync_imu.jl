@@ -17,10 +17,14 @@ else
     # For interactive testing
     const id = "62"
     const session = "1"
-    const day = "5"
+    const day = "1"
 end
 
 const run_start = now()
+
+# Start loading models asynchronously in the background while features are calculated
+const model_task = Threads.@spawn load_object("group_model_TDCP_fast.jld2")
+const model_rest_task = Threads.@spawn load_object("group_model_restraint_GA_fast.jld2")
 
 if day == "1"
     const suffix = ""
@@ -453,12 +457,12 @@ ds_out = select(slide, :time_start, :wear_status)
 leftjoin!(ds_out, windows, on = :time_start => :temp_time)
 
 # PREDICT FROM MODEL
-model = load_object("group_model_TDCP.jld2")
 features = Matrix(dropmissing(slide[:,Not(["time_start", "wear_status"])]))
+model = fetch(model_task)
 ds_out.pos = DecisionTree.predict(model, features)
 
 # PREDICT RESTRAINT
-model_rest = load_object("group_model_restraint_GA.jld2")
+model_rest = fetch(model_rest_task)
 #features = Matrix(dropmissing(slide[:,Not(["time_start"])]))
 ds_out.restraint = DecisionTree.predict(model_rest, features)
 

@@ -32,7 +32,7 @@ check_file "${id}_${session}/right_ankle_synced.csv"
 check_file "${id}_${session}/right_hip_synced.csv"
 
 # Run Julia script sync_imu
-julia sync_imu.jl "$id" "$session" 1
+julia --threads=auto sync_imu.jl "$id" "$session" 1
 
 # Run sync_imu for day 2 if corresponding files exist
 if [ -f "${id}_${session}/left_ankle_synced_2.csv" ] && \
@@ -40,7 +40,7 @@ if [ -f "${id}_${session}/left_ankle_synced_2.csv" ] && \
    [ -f "${id}_${session}/right_ankle_synced_2.csv" ] && \
    [ -f "${id}_${session}/right_hip_synced_2.csv" ]; then
     echo "Files for day 2 found. Running sync_imu.jl for day 2..."
-    julia sync_imu.jl "$id" "$session" 2
+    julia --threads=auto sync_imu.jl "$id" "$session" 2
 fi
 
 # Run sync_imu for day 3 if corresponding files exist
@@ -49,7 +49,7 @@ if [ -f "${id}_${session}/left_ankle_synced_3.csv" ] && \
    [ -f "${id}_${session}/right_ankle_synced_3.csv" ] && \
    [ -f "${id}_${session}/right_hip_synced_3.csv" ]; then
     echo "Files for day 3 found. Running sync_imu.jl for day 3..."
-    julia sync_imu.jl "$id" "$session" 3
+    julia --threads=auto sync_imu.jl "$id" "$session" 3
 fi
 
 # Run sync_imu for day 4 if corresponding files exist
@@ -58,7 +58,7 @@ if [ -f "${id}_${session}/left_ankle_synced_4.csv" ] && \
    [ -f "${id}_${session}/right_ankle_synced_4.csv" ] && \
    [ -f "${id}_${session}/right_hip_synced_4.csv" ]; then
     echo "Files for day 4 found. Running sync_imu.jl for day 4..."
-    julia sync_imu.jl "$id" "$session" 4
+    julia --threads=auto sync_imu.jl "$id" "$session" 4
 fi
 
 # Run sync_imu for day 5 if corresponding files exist
@@ -67,13 +67,13 @@ if [ -f "${id}_${session}/left_ankle_synced_5.csv" ] && \
    [ -f "${id}_${session}/right_ankle_synced_5.csv" ] && \
    [ -f "${id}_${session}/right_hip_synced_5.csv" ]; then
     echo "Files for day 5 found. Running sync_imu.jl for day 5..."
-    julia sync_imu.jl "$id" "$session" 5
+    julia --threads=auto sync_imu.jl "$id" "$session" 5
 fi
 
 
 check_file "${id}_${session}/caregiver_hip_synced.csv"
 check_file "${id}_${session}/caregiver_wrist_synced.csv"
-julia sync_parent_imu.jl "$id" "$session"
+julia --threads=auto sync_parent_imu.jl "$id" "$session"
 
 check_file "${id}_${session}/cg_position_predictions_4s.csv"
 check_file "${id}_${session}/infant_position_predictions_4s.csv"
