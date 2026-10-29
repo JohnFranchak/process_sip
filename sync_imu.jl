@@ -336,7 +336,7 @@ windows[!, :nap_period] .= 0
 windows[!, :exclude_period] .= 0
 ##
 # Read nap and exclude times ONLY FOR DAY 1
-if day == ""
+if day == "1"
     file = id * "_" * session * "/session_info.csv"
     anno = CSV.read(file, DataFrame; missingstring = "NA")
 
@@ -469,8 +469,6 @@ ds_out.restraint = DecisionTree.predict(model_rest, features)
 # WRITE CSV
 CSV.write(id * "_" * session * "/" * "infant_position_predictions_4s" * suffix * ".csv", ds_out)
 
-if day == "" day_label = "1" else day_label = day end
-
-println("Wrote windows, motion features, and infant predictions for id " * id * " session " * session * " day " * day_label)
+println("Wrote windows, motion features, and infant predictions for id " * id * " session " * session * " day " * day)
 println("Run took ", Dates.canonicalize(Dates.CompoundPeriod(now()-run_start)))
 

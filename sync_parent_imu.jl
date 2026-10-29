@@ -9,7 +9,7 @@ using Pipe: @pipe
 println("Running in environment: ", Base.active_project())
 
 if length(ARGS) > 0
-    println("Creating CG motion features for id " * ARGS[1] * " session " * ARGS[2])
+    println("Creating CG motion features for id " * ARGS[1] * " session " * ARGS[2] * " day " * ARGS[3])
     const id = ARGS[1]
     const session = ARGS[2]
     const day = ARGS[3]
@@ -17,7 +17,7 @@ else
     # For interactive testing
     const id = "62"
     const session = "1"
-    const day = "1"
+    const day = "2"
 end
 
 const run_start = now()
@@ -236,7 +236,7 @@ windows = CSV.read(id * "_" * session * "/" * "windows_4s" * suffix * ".csv", Da
 ds = dropmissing(ds)
 temp_time = ds.time
 
-if day == ""
+if day == "1"
     file = id * "_" * session * "/session_info.csv"
     anno = CSV.read(file, DataFrame; missingstring = "NA")
     @chain anno begin
@@ -344,7 +344,7 @@ add_cg_session_wear_labels!(slide)
 ds_out = select(slide, :time_start, :cg_wear_status)
 ds_out[!, :cg_exclude_period] .= 0
 
-if day == ""
+if day == "1"
     if  nrow(exclude_starts) > 0
         for i in axes(exclude_starts,1)
             @transform!(ds_out, @subset(:time_start >= exclude_starts.value[i] && :time_start <= exclude_ends.value[i]), :cg_exclude_period = 1)

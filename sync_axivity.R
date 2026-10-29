@@ -146,11 +146,11 @@ dsrh %>% filter(time_sync >= start_time, time_sync < end_time)%>%
   write_csv(str_glue("{id}_{session}/right_hip_synced.csv"))
 
 if (process_cg) {
-  dsch <- dsch %>% filter(time_sync >= start_time, time_sync < end_time)
-  dscw <- dscw %>% filter(time_sync >= start_time, time_sync < end_time)
-  dsch %>% mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
+  dsch %>% filter(time_sync >= start_time, time_sync < end_time) %>% 
+    mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
     write_csv(str_glue("{id}_{session}/caregiver_hip_synced.csv"))
-  dscw %>% mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
+  dscw %>% filter(time_sync >= start_time, time_sync < end_time) %>% 
+    mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
     write_csv(str_glue("{id}_{session}/caregiver_wrist_synced.csv"))
 }
 
