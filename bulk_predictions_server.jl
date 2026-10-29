@@ -7,9 +7,9 @@ subfolders = filter(isdir, joinpath.(target_dir, readdir(target_dir))) #Run ever
 #subfolders = "/Volumes/padlab/study_sensorsinperson/data_processed/imu/42_1" #Run specific
 
 # LOAD MODELS
-model = load_object("group_model_TDCP.jld2")
-model_rest = load_object("group_model_restraint_GA.jld2")
-model_cg = load_object("group_model_parent.jld2")
+model = load_object("group_model_TDCP_fast.jld2")
+model_rest = load_object("group_model_restraint_GA_fast.jld2")
+model_cg = load_object("group_model_parent_fast.jld2")
 
 function add_session_wear_labels!(df::DataFrame; acc_threshold::Float64=0.02, gyro_threshold::Float64=1.0)
     sensors = ["lh", "rh", "la", "ra"]

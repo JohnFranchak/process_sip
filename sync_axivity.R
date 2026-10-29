@@ -2,8 +2,8 @@ args <- commandArgs(trailingOnly = TRUE)
 
 if (length(args) == 0) {
   print("No id or session supplied; using test parameters instead")
-  id <- 45
-  session <-  2
+  id <- 62
+  session <-  1
 } else {
   id <- args[1]
   session <- args[2]
@@ -36,15 +36,16 @@ col_names <- c("time", "acc_x","acc_y", "acc_z", "gyr_x", "gyr_y","gyr_z")
 diff_lh <- as_datetime(sync_time$sync_point_la) - as_datetime(sync_time$sync_point_lh)
 diff_ra <- as_datetime(sync_time$sync_point_la) - as_datetime(sync_time$sync_point_ra)
 diff_rh <- as_datetime(sync_time$sync_point_la) - as_datetime(sync_time$sync_point_rh)
-diff_cw <- as_datetime(sync_time$sync_point_la) - as_datetime(sync_time$sync_point_cw)
-diff_ch <- as_datetime(sync_time$sync_point_la) - as_datetime(sync_time$sync_point_ch)
+
 test1 <- (as_datetime(sync_time$sync_point_lh[1]) + diff_lh) == as_datetime(sync_time$sync_point_la[1])
 test2 <- (as_datetime(sync_time$sync_point_ra[1]) + diff_ra) == as_datetime(sync_time$sync_point_la[1])
 test3 <- (as_datetime(sync_time$sync_point_rh[1]) + diff_rh) == as_datetime(sync_time$sync_point_la[1])
-test4 <- (as_datetime(sync_time$sync_point_ch[1]) + diff_ch) == as_datetime(sync_time$sync_point_la[1])
-test5 <- (as_datetime(sync_time$sync_point_cw[1]) + diff_cw) == as_datetime(sync_time$sync_point_la[1])
 
 if (process_cg) {
+  diff_cw <- as_datetime(sync_time$sync_point_la) - as_datetime(sync_time$sync_point_cw)
+  diff_ch <- as_datetime(sync_time$sync_point_la) - as_datetime(sync_time$sync_point_ch)
+  test4 <- (as_datetime(sync_time$sync_point_ch[1]) + diff_ch) == as_datetime(sync_time$sync_point_la[1])
+  test5 <- (as_datetime(sync_time$sync_point_cw[1]) + diff_cw) == as_datetime(sync_time$sync_point_la[1])
   if (test1 & test2 & test3 & test4 & test5) {
     print("IMU signals successfully synchronized")
   } else {
@@ -145,11 +146,11 @@ dsrh %>% filter(time_sync >= start_time, time_sync < end_time)%>%
   write_csv(str_glue("{id}_{session}/right_hip_synced.csv"))
 
 if (process_cg) {
-  dsch <- dsch %>% filter(time_sync >= start_time, time_sync < end_time)
-  dscw <- dscw %>% filter(time_sync >= start_time, time_sync < end_time)
-  dsch %>% mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
+  dsch %>% filter(time_sync >= start_time, time_sync < end_time) %>% 
+    mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
     write_csv(str_glue("{id}_{session}/caregiver_hip_synced.csv"))
-  dscw %>% mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
+  dscw %>% filter(time_sync >= start_time, time_sync < end_time) %>% 
+    mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
     write_csv(str_glue("{id}_{session}/caregiver_wrist_synced.csv"))
 }
 
@@ -245,6 +246,82 @@ if (file.exists(str_glue("{id}_{session}/multiday_info.csv"))){
       geom_line(data = temp_rh, aes(x = time_sync, y = sqrt(acc_x^2 + acc_y^2 + acc_z^2)-5), alpha = .4, color = "orange") + 
       ggtitle("Day 3 sync")
     print("Wrote Day 3")
+  }
+  
+}
+
+if (file.exists(str_glue("{id}_{session}/multiday_info_5day.csv"))){
+  print("Processing multiday IMU")
+  sync_multiday_5day <- read_csv(str_glue("{id}_{session}/multiday_info_5day.csv"))
+  
+  for (i in 1:nrow(sync_multiday_5day)) {
+    sync_multiday <- sync_multiday_5day[i, ]
+    if (sync_multiday$use_recording___1 == 1) {
+      recording_day <- str_split_i(sync_multiday$redcap_event_name, "_", 3)
+      
+      diff_lh_2 <- as_datetime(sync_multiday$sync_point_la_multi) - as_datetime(sync_multiday$sync_point_lh_multi)
+      diff_ra_2 <- as_datetime(sync_multiday$sync_point_la_multi) - as_datetime(sync_multiday$sync_point_ra_multi)
+      diff_rh_2 <- as_datetime(sync_multiday$sync_point_la_multi) - as_datetime(sync_multiday$sync_point_rh_multi)
+      
+      test_date <- as.character(as_date(sync_multiday$recording_date))
+      start_time <- str_glue("{test_date} {sync_multiday$time_leg_on_multi}")
+      start_time <- force_tz(as_datetime(start_time),"America/Los_Angeles")
+      
+      end_time <- str_glue("{test_date} {sync_multiday$time_leg_off_multi}")
+      end_time <- force_tz(as_datetime(end_time),"America/Los_Angeles")
+      
+      # Write each sensor to file
+      # remove the original diff from day 1 to then add the new diff for day x
+      # dsla never gets diff'ed because it's arbitrarily chosen as the true
+      # time series. Since we have no ground truth there is probably ~15 s of
+      # drift across a week relative to true clock time
+      dsla %>% filter(time_sync >= start_time, time_sync < end_time) %>% 
+        mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
+        write_csv(str_glue("{id}_{session}/left_ankle_synced_{recording_day}.csv"))
+      dsra %>% mutate(time_sync = time_sync - diff_ra + diff_ra_2) %>% 
+        filter(time_sync >= start_time, time_sync < end_time) %>% 
+        mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
+        write_csv(str_glue("{id}_{session}/right_ankle_synced_{recording_day}.csv"))
+      dslh %>% mutate(time_sync = time_sync - diff_lh + diff_lh_2) %>% 
+        filter(time_sync >= start_time, time_sync < end_time)%>% 
+        mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
+        write_csv(str_glue("{id}_{session}/left_hip_synced_{recording_day}.csv"))
+      dsrh %>% mutate(time_sync = time_sync - diff_rh + diff_rh_2) %>% 
+        filter(time_sync >= start_time, time_sync < end_time)%>% 
+        mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
+        write_csv(str_glue("{id}_{session}/right_hip_synced_{recording_day}.csv"))
+      
+      # sync_time <- str_glue("{test_date} {sync_multiday$time_leg_sync_multi}")
+      # sync_time <- force_tz(as_datetime(start_time),"America/Los_Angeles")
+      
+      # temp_la <- dsla %>% filter(time_sync >= (sync_time - minutes(1)), time_sync < (sync_time + minutes(1)))
+      # temp_ra <- dsra %>% mutate(time_sync = time_sync - diff_ra + diff_ra_2) %>% filter(time_sync >= (sync_time - minutes(1)), time_sync < (sync_time + minutes(1)))
+      # temp_lh <- dslh %>% mutate(time_sync = time_sync - diff_lh + diff_lh_2) %>% filter(time_sync >= (sync_time - minutes(1)), time_sync < (sync_time + minutes(1)))
+      # temp_rh <- dsrh %>% mutate(time_sync = time_sync - diff_rh + diff_rh_2) %>% filter(time_sync >= (sync_time - minutes(1)), time_sync < (sync_time + minutes(1)))
+      # ggplot() + 
+      #   geom_line(data = temp_la, aes(x = time_sync, y = sqrt(acc_x^2 + acc_y^2 + acc_z^2)+7), alpha = .4, color = "red") +
+      #   geom_line(data = temp_ra, aes(x = time_sync, y = sqrt(acc_x^2 + acc_y^2 + acc_z^2)+3), alpha = .4, color = "blue") +
+      #   geom_line(data = temp_lh, aes(x = time_sync, y = sqrt(acc_x^2 + acc_y^2 + acc_z^2)-1), alpha = .4, color = "green") +
+      #   geom_line(data = temp_rh, aes(x = time_sync, y = sqrt(acc_x^2 + acc_y^2 + acc_z^2)-5), alpha = .4, color = "orange") +
+      #   ggtitle(str_glue("Day {recording_day} sync"))
+      
+      if (process_cg) {
+        diff_cw_2 <- as_datetime(sync_multiday$sync_point_la_multi) - as_datetime(sync_multiday$sync_point_cw_multi)
+        diff_ch_2 <- as_datetime(sync_multiday$sync_point_la_multi) - as_datetime(sync_multiday$sync_point_ch_multi)
+        
+        dscw %>% mutate(time_sync = time_sync - diff_cw + diff_cw_2) %>% 
+          filter(time_sync >= start_time, time_sync < end_time)%>% 
+          mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
+          write_csv(str_glue("{id}_{session}/caregiver_wrist_synced_{recording_day}.csv"))
+        dsch %>% mutate(time_sync = time_sync - diff_ch + diff_ch_2) %>% 
+          filter(time_sync >= start_time, time_sync < end_time)%>% 
+          mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
+          write_csv(str_glue("{id}_{session}/caregiver_hip_synced_{recording_day}.csv"))
+        
+      }
+      print(str_glue("Wrote Day {recording_day}"))
+    }
+    
   }
   
 }

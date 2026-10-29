@@ -9,18 +9,27 @@ using Pipe: @pipe
 println("Running in environment: ", Base.active_project())
 
 if length(ARGS) > 0
-    println("Creating caregiver motion features for id " * ARGS[1] * " session " * ARGS[2])
+    println("Creating CG motion features for id " * ARGS[1] * " session " * ARGS[2] * " day " * ARGS[3])
     const id = ARGS[1]
     const session = ARGS[2]
+    const day = ARGS[3]
 else
     # For interactive testing
-    const id = "45"
-    const session = "2"
+    const id = "62"
+    const session = "1"
+    const day = "2"
 end
 
 const run_start = now()
 
-const suffix = ""
+# Start loading model asynchronously in the background while features are calculated
+const model_task = Threads.@spawn load_object("group_model_parent_fast.jld2")
+
+if day == "1"
+    const suffix = ""
+else
+    const suffix = "_" * day
+end
 
 function assign(;s::AbstractString, v::Any)
 	s = Symbol(s)
@@ -36,7 +45,7 @@ end
 
 adjust_dst = 0
 function imu_file(;loc)
-    file = id * "_" * session * "/" * "caregiver_" * loc * "_synced.csv"
+    file = id * "_" * session * "/" * "caregiver_" * loc * "_synced" * suffix * ".csv"
     println(file)
     short_code = "l"*loc[1]
     temp = CSV.read(file, DataFrame; header=["time",short_code*"accx",short_code*"accy",short_code*"accz",short_code*"gyrx",short_code*"gyry",short_code*"gyrz"], skipto=2)
@@ -222,35 +231,36 @@ function slide_calc(ds_temp)
     slide
 end
 
-windows = CSV.read(id * "_" * session * "/" * "windows_4s.csv", DataFrame)
+windows = CSV.read(id * "_" * session * "/" * "windows_4s" * suffix * ".csv", DataFrame)
 
-file = id * "_" * session * "/session_info.csv"
-anno = CSV.read(file, DataFrame; missingstring = "NA")
 ds = dropmissing(ds)
 temp_time = ds.time
 
-@chain anno begin
-    @transform! :cg_off_1_start = Date(windows.temp_time[1]) + :cg_off_1_start
-    @transform! :cg_off_1_end = Date(windows.temp_time[1]) + :cg_off_1_end
-    @transform! :cg_off_2_start = Date(windows.temp_time[1]) + :cg_off_2_start
-    @transform! :cg_off_2_end = Date(windows.temp_time[1]) + :cg_off_2_end
-    @transform! :cg_off_3_start = Date(windows.temp_time[1]) + :cg_off_3_start
-    @transform! :cg_off_3_end = Date(windows.temp_time[1]) + :cg_off_3_end
-    @transform! :cg_off_4_start = Date(windows.temp_time[1]) + :cg_off_4_start
-    @transform! :cg_off_4_end = Date(windows.temp_time[1]) + :cg_off_4_end
-    @transform! :cg_off_5_start = Date(windows.temp_time[1]) + :cg_off_5_start
-    @transform! :cg_off_5_end = Date(windows.temp_time[1]) + :cg_off_5_end
-    @transform! :cg_off_6_start = Date(windows.temp_time[1]) + :cg_off_6_start
-    @transform! :cg_off_6_end = Date(windows.temp_time[1]) + :cg_off_6_end
-    @transform! :cg_off_7_start = Date(windows.temp_time[1]) + :cg_off_7_start
-    @transform! :cg_off_7_end = Date(windows.temp_time[1]) + :cg_off_7_end
-    @transform! :cg_off_8_start = Date(windows.temp_time[1]) + :cg_off_8_start
-    @transform! :cg_off_8_end = Date(windows.temp_time[1]) + :cg_off_8_end
+if day == "1"
+    file = id * "_" * session * "/session_info.csv"
+    anno = CSV.read(file, DataFrame; missingstring = "NA")
+    @chain anno begin
+        @transform! :cg_off_1_start = Date(windows.temp_time[1]) + :cg_off_1_start
+        @transform! :cg_off_1_end = Date(windows.temp_time[1]) + :cg_off_1_end
+        @transform! :cg_off_2_start = Date(windows.temp_time[1]) + :cg_off_2_start
+        @transform! :cg_off_2_end = Date(windows.temp_time[1]) + :cg_off_2_end
+        @transform! :cg_off_3_start = Date(windows.temp_time[1]) + :cg_off_3_start
+        @transform! :cg_off_3_end = Date(windows.temp_time[1]) + :cg_off_3_end
+        @transform! :cg_off_4_start = Date(windows.temp_time[1]) + :cg_off_4_start
+        @transform! :cg_off_4_end = Date(windows.temp_time[1]) + :cg_off_4_end
+        @transform! :cg_off_5_start = Date(windows.temp_time[1]) + :cg_off_5_start
+        @transform! :cg_off_5_end = Date(windows.temp_time[1]) + :cg_off_5_end
+        @transform! :cg_off_6_start = Date(windows.temp_time[1]) + :cg_off_6_start
+        @transform! :cg_off_6_end = Date(windows.temp_time[1]) + :cg_off_6_end
+        @transform! :cg_off_7_start = Date(windows.temp_time[1]) + :cg_off_7_start
+        @transform! :cg_off_7_end = Date(windows.temp_time[1]) + :cg_off_7_end
+        @transform! :cg_off_8_start = Date(windows.temp_time[1]) + :cg_off_8_start
+        @transform! :cg_off_8_end = Date(windows.temp_time[1]) + :cg_off_8_end
+    end
+
+    exclude_starts = dropmissing(stack(select(select(select(anno, r"off"),r"start"),r"cg"),1:8))
+    exclude_ends = dropmissing(stack(select(select(select(anno, r"off"),r"end"),r"cg"),1:8))
 end
-
-exclude_starts = dropmissing(stack(select(select(select(anno, r"off"),r"start"),r"cg"),1:8))
-exclude_ends = dropmissing(stack(select(select(select(anno, r"off"),r"end"),r"cg"),1:8))
-
 
 ds.time_sec_rounded = round.(datetime2unix.(temp_time) .- datetime2unix.(windows.temp_time[1]), digits = 2)
 ds = filter(row -> row.time_sec_rounded >= 0, ds)
@@ -284,7 +294,7 @@ slide = vcat(slide0, slide1, slide2, slide3)
 sort!(slide, :time_start)
 @subset!(slide, :time_sec0 > 1)
 select!(slide, Not(:time_sec0))
-CSV.write(id * "_" * session *"/" * "mot_features_cg_4s.csv", slide)
+CSV.write(id * "_" * session *"/" * "mot_features_cg_4s" * suffix * ".csv", slide)
 
 function add_cg_session_wear_labels!(df::DataFrame; acc_threshold::Float64=0.01, gyro_threshold::Float64=1.0)
     sensors = ["lh", "lw"]
@@ -333,22 +343,25 @@ add_cg_session_wear_labels!(slide)
 
 ds_out = select(slide, :time_start, :cg_wear_status)
 ds_out[!, :cg_exclude_period] .= 0
-if  nrow(exclude_starts) > 0
-     for i in axes(exclude_starts,1)
-         @transform!(ds_out, @subset(:time_start >= exclude_starts.value[i] && :time_start <= exclude_ends.value[i]), :cg_exclude_period = 1)
-     end
+
+if day == "1"
+    if  nrow(exclude_starts) > 0
+        for i in axes(exclude_starts,1)
+            @transform!(ds_out, @subset(:time_start >= exclude_starts.value[i] && :time_start <= exclude_ends.value[i]), :cg_exclude_period = 1)
+        end
+    end
 end
 
 #leftjoin!(ds_out, windows, on = :time_start => :temp_time)
 
 # PREDICT FROM MODEL
-model = load_object("group_model_parent.jld2")
 features = Matrix(dropmissing(slide[:,Not(["time_start", "cg_wear_status"])]))
+model = fetch(model_task)
 ds_out.pos = DecisionTree.predict(model, features)
 
 # WRITE CSV
-CSV.write(id * "_" * session * "/" * "cg_position_predictions_4s.csv", ds_out)
+CSV.write(id * "_" * session * "/" * "cg_position_predictions_4s" * suffix * ".csv", ds_out)
 
-println("Wrote motion features and parent predictions for id " * id * " session " * session)
+println("Wrote motion features and parent predictions for id " * id * " session " * session * " day " * day * " to CSV.")
 println("Run took ", Dates.canonicalize(Dates.CompoundPeriod(now()-run_start)))
 

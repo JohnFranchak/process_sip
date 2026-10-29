@@ -60,3 +60,6 @@ api_token.R
 group_model_TDCP.jld2
 group_model_parent.jld2
 group_model_restraint_GA.jld2
+group_model_parent_fast.jld2
+group_model_restraint_GA_fast.jld2
+group_model_TDCP_fast.jld2
