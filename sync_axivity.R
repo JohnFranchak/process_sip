@@ -36,15 +36,16 @@ col_names <- c("time", "acc_x","acc_y", "acc_z", "gyr_x", "gyr_y","gyr_z")
 diff_lh <- as_datetime(sync_time$sync_point_la) - as_datetime(sync_time$sync_point_lh)
 diff_ra <- as_datetime(sync_time$sync_point_la) - as_datetime(sync_time$sync_point_ra)
 diff_rh <- as_datetime(sync_time$sync_point_la) - as_datetime(sync_time$sync_point_rh)
-diff_cw <- as_datetime(sync_time$sync_point_la) - as_datetime(sync_time$sync_point_cw)
-diff_ch <- as_datetime(sync_time$sync_point_la) - as_datetime(sync_time$sync_point_ch)
+
 test1 <- (as_datetime(sync_time$sync_point_lh[1]) + diff_lh) == as_datetime(sync_time$sync_point_la[1])
 test2 <- (as_datetime(sync_time$sync_point_ra[1]) + diff_ra) == as_datetime(sync_time$sync_point_la[1])
 test3 <- (as_datetime(sync_time$sync_point_rh[1]) + diff_rh) == as_datetime(sync_time$sync_point_la[1])
-test4 <- (as_datetime(sync_time$sync_point_ch[1]) + diff_ch) == as_datetime(sync_time$sync_point_la[1])
-test5 <- (as_datetime(sync_time$sync_point_cw[1]) + diff_cw) == as_datetime(sync_time$sync_point_la[1])
 
 if (process_cg) {
+  diff_cw <- as_datetime(sync_time$sync_point_la) - as_datetime(sync_time$sync_point_cw)
+  diff_ch <- as_datetime(sync_time$sync_point_la) - as_datetime(sync_time$sync_point_ch)
+  test4 <- (as_datetime(sync_time$sync_point_ch[1]) + diff_ch) == as_datetime(sync_time$sync_point_la[1])
+  test5 <- (as_datetime(sync_time$sync_point_cw[1]) + diff_cw) == as_datetime(sync_time$sync_point_la[1])
   if (test1 & test2 & test3 & test4 & test5) {
     print("IMU signals successfully synchronized")
   } else {
@@ -249,7 +250,7 @@ if (file.exists(str_glue("{id}_{session}/multiday_info.csv"))){
   
 }
 
-if (file.exists(str_glue("{id}_{session}/multiday_info.csv"))){
+if (file.exists(str_glue("{id}_{session}/multiday_info_5day.csv"))){
   print("Processing multiday IMU")
   sync_multiday_5day <- read_csv(str_glue("{id}_{session}/multiday_info_5day.csv"))
   
@@ -297,8 +298,8 @@ if (file.exists(str_glue("{id}_{session}/multiday_info.csv"))){
         geom_line(data = temp_ra, aes(x = time_sync, y = sqrt(acc_x^2 + acc_y^2 + acc_z^2)+3), alpha = .4, color = "blue") +
         geom_line(data = temp_lh, aes(x = time_sync, y = sqrt(acc_x^2 + acc_y^2 + acc_z^2)-1), alpha = .4, color = "green") +
         geom_line(data = temp_rh, aes(x = time_sync, y = sqrt(acc_x^2 + acc_y^2 + acc_z^2)-5), alpha = .4, color = "orange") +
-        ggtitle("Day 2 sync")
-      print("Wrote Day 2")
+        ggtitle(str_glue("Day {recording_day} sync"))
+      print(str_glue("Wrote Day {recording_day}"))
     }
     
   }
