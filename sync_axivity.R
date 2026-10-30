@@ -10,6 +10,7 @@ if (length(args) == 0) {
 }
 
 library(tidyverse)
+library(nanoparquet)
 
 # CHECK FOR IMU FILES
 
@@ -134,24 +135,24 @@ print(str_glue("Read 6 IMU files; filtering data from {start_time} to {end_time}
 # Turn into something we can analyze in Julia
 dsla %>% filter(time_sync >= start_time, time_sync < end_time) %>% 
   mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
-  write_csv(str_glue("{id}_{session}/left_ankle_synced.csv"))
+  write_parquet(str_glue("{id}_{session}/left_ankle_synced.parquet"))
 dsra %>% filter(time_sync >= start_time, time_sync < end_time)%>% 
   mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
-  write_csv(str_glue("{id}_{session}/right_ankle_synced.csv"))
+  write_parquet(str_glue("{id}_{session}/right_ankle_synced.parquet"))
 dslh %>% filter(time_sync >= start_time, time_sync < end_time)%>% 
   mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
-  write_csv(str_glue("{id}_{session}/left_hip_synced.csv"))
+  write_parquet(str_glue("{id}_{session}/left_hip_synced.parquet"))
 dsrh %>% filter(time_sync >= start_time, time_sync < end_time)%>% 
   mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
-  write_csv(str_glue("{id}_{session}/right_hip_synced.csv"))
+  write_parquet(str_glue("{id}_{session}/right_hip_synced.parquet"))
 
 if (process_cg) {
   dsch %>% filter(time_sync >= start_time, time_sync < end_time) %>% 
     mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
-    write_csv(str_glue("{id}_{session}/caregiver_hip_synced.csv"))
+    write_parquet(str_glue("{id}_{session}/caregiver_hip_synced.parquet"))
   dscw %>% filter(time_sync >= start_time, time_sync < end_time) %>% 
     mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
-    write_csv(str_glue("{id}_{session}/caregiver_wrist_synced.csv"))
+    write_parquet(str_glue("{id}_{session}/caregiver_wrist_synced.parquet"))
 }
 
 print(str_glue("Successfully wrote synced IMU files to {id}_{session}/"))
@@ -174,19 +175,19 @@ if (file.exists(str_glue("{id}_{session}/multiday_info.csv"))){
     
     dsla %>% filter(time_sync >= start_time, time_sync < end_time) %>% 
       mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
-      write_csv(str_glue("{id}_{session}/left_ankle_synced_2.csv"))
+      write_parquet(str_glue("{id}_{session}/left_ankle_synced_2.parquet"))
     dsra %>% mutate(time_sync = time_sync - diff_ra + diff_ra_2) %>% 
       filter(time_sync >= start_time, time_sync < end_time) %>% 
       mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
-      write_csv(str_glue("{id}_{session}/right_ankle_synced_2.csv"))
+      write_parquet(str_glue("{id}_{session}/right_ankle_synced_2.parquet"))
     dslh %>% mutate(time_sync = time_sync - diff_lh + diff_lh_2) %>% 
       filter(time_sync >= start_time, time_sync < end_time)%>% 
       mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
-      write_csv(str_glue("{id}_{session}/left_hip_synced_2.csv"))
+      write_parquet(str_glue("{id}_{session}/left_hip_synced_2.parquet"))
     dsrh %>% mutate(time_sync = time_sync - diff_rh + diff_rh_2) %>% 
       filter(time_sync >= start_time, time_sync < end_time)%>% 
       mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
-      write_csv(str_glue("{id}_{session}/right_hip_synced_2.csv"))
+      write_parquet(str_glue("{id}_{session}/right_hip_synced_2.parquet"))
     
     sync_time <- str_glue("{test_date} {sync_multiday$time_leg_sync_2}")
     sync_time <- force_tz(as_datetime(start_time),"America/Los_Angeles")
@@ -218,19 +219,19 @@ if (file.exists(str_glue("{id}_{session}/multiday_info.csv"))){
     
     dsla %>% filter(time_sync >= start_time, time_sync < end_time) %>% 
       mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
-      write_csv(str_glue("{id}_{session}/left_ankle_synced_3.csv"))
+      write_parquet(str_glue("{id}_{session}/left_ankle_synced_3.parquet"))
     dsra %>% mutate(time_sync = time_sync - diff_ra + diff_ra_3) %>% 
       filter(time_sync >= start_time, time_sync < end_time) %>% 
       mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
-      write_csv(str_glue("{id}_{session}/right_ankle_synced_3.csv"))
+      write_parquet(str_glue("{id}_{session}/right_ankle_synced_3.parquet"))
     dslh %>% mutate(time_sync = time_sync - diff_lh + diff_lh_3) %>% 
       filter(time_sync >= start_time, time_sync < end_time)%>% 
       mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
-      write_csv(str_glue("{id}_{session}/left_hip_synced_3.csv"))
+      write_parquet(str_glue("{id}_{session}/left_hip_synced_3.parquet"))
     dsrh %>% mutate(time_sync = time_sync - diff_rh + diff_rh_3) %>% 
       filter(time_sync >= start_time, time_sync < end_time)%>% 
       mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
-      write_csv(str_glue("{id}_{session}/right_hip_synced_3.csv"))
+      write_parquet(str_glue("{id}_{session}/right_hip_synced_3.parquet"))
     
     sync_time <- str_glue("{test_date} {sync_multiday$time_leg_sync_3}")
     sync_time <- force_tz(as_datetime(start_time),"America/Los_Angeles")
@@ -277,19 +278,19 @@ if (file.exists(str_glue("{id}_{session}/multiday_info_5day.csv"))){
       # drift across a week relative to true clock time
       dsla %>% filter(time_sync >= start_time, time_sync < end_time) %>% 
         mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
-        write_csv(str_glue("{id}_{session}/left_ankle_synced_{recording_day}.csv"))
+        write_parquet(str_glue("{id}_{session}/left_ankle_synced_{recording_day}.parquet"))
       dsra %>% mutate(time_sync = time_sync - diff_ra + diff_ra_2) %>% 
         filter(time_sync >= start_time, time_sync < end_time) %>% 
         mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
-        write_csv(str_glue("{id}_{session}/right_ankle_synced_{recording_day}.csv"))
+        write_parquet(str_glue("{id}_{session}/right_ankle_synced_{recording_day}.parquet"))
       dslh %>% mutate(time_sync = time_sync - diff_lh + diff_lh_2) %>% 
         filter(time_sync >= start_time, time_sync < end_time)%>% 
         mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
-        write_csv(str_glue("{id}_{session}/left_hip_synced_{recording_day}.csv"))
+        write_parquet(str_glue("{id}_{session}/left_hip_synced_{recording_day}.parquet"))
       dsrh %>% mutate(time_sync = time_sync - diff_rh + diff_rh_2) %>% 
         filter(time_sync >= start_time, time_sync < end_time)%>% 
         mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
-        write_csv(str_glue("{id}_{session}/right_hip_synced_{recording_day}.csv"))
+        write_parquet(str_glue("{id}_{session}/right_hip_synced_{recording_day}.parquet"))
       
       # sync_time <- str_glue("{test_date} {sync_multiday$time_leg_sync_multi}")
       # sync_time <- force_tz(as_datetime(start_time),"America/Los_Angeles")
@@ -312,11 +313,11 @@ if (file.exists(str_glue("{id}_{session}/multiday_info_5day.csv"))){
         dscw %>% mutate(time_sync = time_sync - diff_cw + diff_cw_2) %>% 
           filter(time_sync >= start_time, time_sync < end_time)%>% 
           mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
-          write_csv(str_glue("{id}_{session}/caregiver_wrist_synced_{recording_day}.csv"))
+          write_parquet(str_glue("{id}_{session}/caregiver_wrist_synced_{recording_day}.parquet"))
         dsch %>% mutate(time_sync = time_sync - diff_ch + diff_ch_2) %>% 
           filter(time_sync >= start_time, time_sync < end_time)%>% 
           mutate(time = as.numeric(time_sync)) %>% select(-time_sync) %>% 
-          write_csv(str_glue("{id}_{session}/caregiver_hip_synced_{recording_day}.csv"))
+          write_parquet(str_glue("{id}_{session}/caregiver_hip_synced_{recording_day}.parquet"))
         
       }
       print(str_glue("Wrote Day {recording_day}"))

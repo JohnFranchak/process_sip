@@ -56,6 +56,7 @@ api_token.R
 .DS_Store
 
 *.csv
+*.parquet
 *.pdf
 group_model_TDCP.jld2
 group_model_parent.jld2

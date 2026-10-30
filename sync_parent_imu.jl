@@ -3,7 +3,7 @@ using Pkg
 Pkg.activate(@__DIR__)
 
 using CSV, DataFrames, Dates, DataFrameMacros, Chain, Statistics, TimeZones, StatsBase
-using CategoricalArrays, DecisionTree, JLD2
+using CategoricalArrays, DecisionTree, JLD2, Parquet2
 using Pipe: @pipe
 
 println("Running in environment: ", Base.active_project())
@@ -45,10 +45,12 @@ end
 
 adjust_dst = 0
 function imu_file(;loc)
-    file = id * "_" * session * "/" * "caregiver_" * loc * "_synced" * suffix * ".csv"
+    file = id * "_" * session * "/" * "caregiver_" * loc * "_synced" * suffix * ".parquet"
     println(file)
     short_code = "l"*loc[1]
-    temp = CSV.read(file, DataFrame; header=["time",short_code*"accx",short_code*"accy",short_code*"accz",short_code*"gyrx",short_code*"gyry",short_code*"gyrz"], skipto=2)
+    temp = mapcols!(collect, DataFrame(Parquet2.Dataset(file); copycols=false))
+    rename!(temp, ["time",short_code*"accx",short_code*"accy",short_code*"accz",short_code*"gyrx",short_code*"gyry",short_code*"gyrz"])
+    dropmissing!(temp, :time)
     @transform!(temp, :time = fix_tz(:time) + Hour(adjust_dst))
     assign(; s = short_code,v = temp)
 end
@@ -231,7 +233,7 @@ function slide_calc(ds_temp)
     slide
 end
 
-windows = CSV.read(id * "_" * session * "/" * "windows_4s" * suffix * ".csv", DataFrame)
+windows = mapcols!(collect, DataFrame(Parquet2.Dataset(id * "_" * session * "/" * "windows_4s" * suffix * ".parquet"); copycols=false))
 
 ds = dropmissing(ds)
 temp_time = ds.time
@@ -294,7 +296,7 @@ slide = vcat(slide0, slide1, slide2, slide3)
 sort!(slide, :time_start)
 @subset!(slide, :time_sec0 > 1)
 select!(slide, Not(:time_sec0))
-CSV.write(id * "_" * session *"/" * "mot_features_cg_4s" * suffix * ".csv", slide)
+Parquet2.writefile(id * "_" * session *"/" * "mot_features_cg_4s" * suffix * ".parquet", slide)
 
 function add_cg_session_wear_labels!(df::DataFrame; acc_threshold::Float64=0.01, gyro_threshold::Float64=1.0)
     sensors = ["lh", "lw"]
