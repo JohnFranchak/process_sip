@@ -1,5 +1,5 @@
 using CSV, DataFrames, Dates, DataFrameMacros, Chain, Statistics, TimeZones, StatsBase
-using CategoricalArrays, DecisionTree, JLD2
+using CategoricalArrays, DecisionTree, JLD2, Parquet2
 using Pipe: @pipe
 
 target_dir = "/Volumes/padlab/study_sensorsinperson/data_processed/imu"
@@ -89,12 +89,12 @@ end
 for folder in subfolders
     
     print("Predicting position and restraint for " * basename(folder) * "\n")
-    feature_file = folder *"/" * "mot_features_infant_4s.csv"
-    window_file = folder *"/" * "windows_4s.csv"
+    feature_file = folder *"/" * "mot_features_infant_4s.parquet"
+    window_file = folder *"/" * "windows_4s.parquet"
     anno_file = folder * "/session_info.csv"
 
-    slide = CSV.read(feature_file, DataFrame)
-    windows = CSV.read(window_file, DataFrame)  
+    slide = mapcols!(collect, DataFrame(Parquet2.Dataset(feature_file); copycols=false))
+    windows = mapcols!(collect, DataFrame(Parquet2.Dataset(window_file); copycols=false))  
     anno = CSV.read(anno_file, DataFrame; missingstring = "NA")
 
     add_session_wear_labels!(slide)
@@ -119,12 +119,12 @@ print("Finished writing infant predictions ")
 for folder in subfolders
     
     print("Predicting CG position for " * basename(folder) * "\n")
-    feature_file = folder *"/" * "mot_features_cg_4s.csv"
-    window_file = folder *"/" * "windows_4s.csv"
+    feature_file = folder *"/" * "mot_features_cg_4s.parquet"
+    window_file = folder *"/" * "windows_4s.parquet"
     anno_file = folder * "/session_info.csv"
 
-    slide = CSV.read(feature_file, DataFrame)
-    windows = CSV.read(window_file, DataFrame)
+    slide = mapcols!(collect, DataFrame(Parquet2.Dataset(feature_file); copycols=false))
+    windows = mapcols!(collect, DataFrame(Parquet2.Dataset(window_file); copycols=false))
     anno = CSV.read(anno_file, DataFrame; missingstring = "NA")
 
     @chain anno begin

@@ -16,6 +16,7 @@ library(scales)
 library(REDCapR)
 library(patchwork)
 library(tidyquant)
+library(nanoparquet)
 
 uri <- "https://redcap.ucr.edu/api/"
 source("api_token.R")
@@ -38,7 +39,8 @@ cg_predictions <- read_csv(str_glue("{id}_{session}/cg_position_predictions_4s.c
   rename(cgpos = pos) %>% mutate(time_rounded = round(as.numeric(time_start))) %>% 
   select(-time_start)
 
-windows <- read_csv(str_glue("{id}_{session}/windows_4s.csv"))  %>% 
+windows <- read_parquet(str_glue("{id}_{session}/windows_4s.parquet")) %>% 
+  mutate(across(where(is.POSIXct), ~ with_tz(.x, "UTC"))) %>% 
   rename(time = temp_time) %>% 
   select(-(time_sec:time_sec3))
 
